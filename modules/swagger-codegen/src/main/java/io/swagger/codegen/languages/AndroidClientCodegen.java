@@ -33,6 +33,8 @@ public class AndroidClientCodegen extends DefaultCodegen implements CodegenConfi
     // requestPackage and authPackage are used by the "volley" template/library
     protected String requestPackage = "io.swagger.client.request";
     protected String syncPackage = "io.swagger.client.sync";
+    protected String observerPackage = "io.swagger.client.observer";
+    protected String contentPackage = "io.swagger.client.content";
     protected String authPackage = "io.swagger.client.auth";
     protected String gradleWrapperPackage = "gradle.wrapper";
     protected String apiDocPath = "docs/";
@@ -451,6 +453,12 @@ public class AndroidClientCodegen extends DefaultCodegen implements CodegenConfi
                 (sourceFolder + File.separator + invokerPackage).replace(".", File.separator), "ApiException.java"));
         supportingFiles.add(new SupportingFile("sync/syncAdapter.mustache",
                 (sourceFolder + File.separator + syncPackage).replace(".", File.separator), "SyncAdapter.java"));
+        supportingFiles.add(new SupportingFile("sync/syncService.mustache",
+                (sourceFolder + File.separator + syncPackage).replace(".", File.separator), "SyncService.java"));
+        supportingFiles.add(new SupportingFile("observer/observer.mustache",
+                (sourceFolder + File.separator + observerPackage).replace(".", File.separator), "Observer.java"));
+        supportingFiles.add(new SupportingFile("content/contract.mustache",
+                (sourceFolder + File.separator + contentPackage).replace(".", File.separator), "Contract.java"));
         supportingFiles.add(new SupportingFile("Pair.mustache",
                 (sourceFolder + File.separator + invokerPackage).replace(".", File.separator), "Pair.java"));
         supportingFiles.add(new SupportingFile("request/getrequest.mustache",

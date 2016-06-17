@@ -1,0 +1,43 @@
+package {{invokerPackage}}.observer;
+
+import android.content.Context;
+import android.database.ContentObserver;
+import android.net.Uri;
+import android.os.Handler;
+import android.util.Log;
+
+public class Observer extends ContentObserver {
+
+    public static final String LOG_TAG = Observer.class.getSimpleName();
+
+    Handler mHandler;
+    Context mContext;
+
+    /**
+     * Creates a content observer.
+     *
+     * @param context The context of the app {@link #onChange} on, or null if none.
+     */
+    public Observer(Context context, Handler handler) {
+        super(handler);
+        mHandler = handler;
+        mContext = context;
+    }
+
+    @Override
+    public void onChange(boolean selfChange) {
+        onChange(selfChange, null);
+    }
+
+    public void onChange(boolean selfChange, Uri uri) {
+        String sUri;
+
+        if (null != uri) {
+            sUri = uri.toString();
+        } else {
+            sUri = "";
+        }
+        Log.d(LOG_TAG, "onChange triggered for: '" + sUri + "'");
+    }
+
+}
