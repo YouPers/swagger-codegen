@@ -1,7 +1,69 @@
 package {{invokerPackage}}.content;
 
+import android.provider.BaseColumns;
+import android.net.Uri;
+import android.content.ContentResolver;
+
+/**
+ *
+ * Application: {{appName}} - {{appVersion}}
+ * Contact:     {{infoEmail}} - {{infoUrl}}
+ *
+ */
+
 public class Contract {
 
     public static final String LOG_TAG = Contract.class.getSimpleName();
+
+{{#swagger}}
+    // The "Content authority" is a name for the entire content provider, similar to the
+    // relationship between a domain name and its website.  A convenient string to use for the
+    // content authority is the package name for the app, which is guaranteed to be unique on the
+    // device.
+    public static final String CONTENT_AUTHORITY = "{{vendorExtensions.x-android-sync-content-authority}}";
+
+    // Use CONTENT_AUTHORITY to create the base of all URI's which apps will use to contact
+    // the content provider.
+    public static final Uri BASE_CONTENT_URI = Uri.parse("content://" + CONTENT_AUTHORITY);
+{{/swagger}}
+
+{{#models}}
+    {{#model}}{{#vendorExtensions.x-android-sync-table}}
+    public static final String PATH_{{vendorExtensions.x-android-sync-table.toUpperCase}} = "{{vendorExtensions.x-android-sync-table}}";
+    {{/vendorExtensions.x-android-sync-table}}
+    {{/model}}
+{{/models}}
+
+    public static final class Generic {
+        public static final String COLUMN_BACKEND_ID = "backend_id";
+        public static final String COLUMN_BACKEND_VERSION_ID = "backend_version_id";
+        public static final String COLUMN_BACKEND_CREATED_AT = "backend_created_at";
+        public static final String COLUMN_BACKEND_UPDATED_AT = "backend_updated_at";
+        public static final String COLUMN_SYNC_TO_UPDATE = "sync_to_update";
+        public static final String COLUMN_SYNC_TO_DELETE = "sync_to_delete";
+        public static final String COLUMN_MARKED_AS_DELETED = "marked_as_deleted";
+    }
+
+{{#models}}
+    {{#model}}{{#vendorExtensions.x-android-sync-table}}
+    public static final class {{vendorExtensions.x-android-sync-table}}Entry implements BaseColumns {
+
+        public static final Uri CONTENT_URI = BASE_CONTENT_URI.buildUpon().appendPath(PATH_{{vendorExtensions.x-android-sync-table.toUpperCase}}).build();
+
+        public static final String CONTENT_DIR_TYPE = ContentResolver.CURSOR_DIR_BASE_TYPE + "/" + CONTENT_AUTHORITY + "/" + PATH_{{vendorExtensions.x-android-sync-table.toUpperCase}};
+        public static final String CONTENT_ITEM_TYPE = ContentResolver.CURSOR_ITEM_BASE_TYPE + "/" + CONTENT_AUTHORITY + "/" + PATH_{{vendorExtensions.x-android-sync-table.toUpperCase}};
+
+        // Table name
+        public static final String TABLE_NAME = "{{vendorExtensions.x-android-sync-table}}";
+    {{#vars}}
+        {{^vendorExtensions.x-android-transient}}
+        public static final String COLUMN_{{name.toUpperCase}} = "{{name}}";
+        {{/vendorExtensions.x-android-transient}}
+    {{/vars}}
+
+    }
+    {{/vendorExtensions.x-android-sync-table}}
+    {{/model}}
+{{/models}}
 
 }
