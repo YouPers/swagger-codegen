@@ -1,4 +1,4 @@
-# Swagger Codegen for the AndroidClientCodegen library
+# Swagger Codegen for the AndroidSyncClient library
 
 ## Overview
 This is a boiler-plate project to generate your own client library with Swagger.  It's goal is
@@ -21,9 +21,9 @@ At this point, you've likely generated a client setup.  It will include somethin
 |-- src
 |--- main
 |---- java
-|----- com.youpers.zocaalo.codegen.AndroidClientCodegenGenerator.java // generator file
+|----- com.youpers.zocaalo.codegen.AndroidSyncClientGenerator.java // generator file
 |---- resources
-|----- AndroidClientCodegen // template files
+|----- AndroidSyncClient // template files
 |----- META-INF
 |------ services
 |------- io.swagger.codegen.CodegenConfig
@@ -31,11 +31,11 @@ At this point, you've likely generated a client setup.  It will include somethin
 
 You _will_ need to make changes in at least the following:
 
-`AndroidClientCodegenGenerator.java`
+`AndroidSyncClientGenerator.java`
 
 Templates in this folder:
 
-`src/main/resources/AndroidClientCodegen`
+`src/main/resources/AndroidSyncClient`
 
 Once modified, you can run this:
 
@@ -46,14 +46,14 @@ mvn package
 In your generator project.  A single jar file will be produced in `target`.  You can now use that with codegen:
 
 ```
-java -cp /path/to/swagger-codegen-distribution:/path/to/your/jar io.swagger.codegen.Codegen -l AndroidClientCodegen -o ./test
+java -cp /path/to/swagger-codegen-distribution:/path/to/your/jar io.swagger.codegen.Codegen -l AndroidSyncClient -o ./test
 ```
 
 Now your templates are available to the client generator and you can write output values
 
 ## But how do I modify this?
-The `AndroidClientCodegenGenerator.java` has comments in it--lots of comments.  There is no good substitute
-for reading the code more, though.  See how the `AndroidClientCodegenGenerator` implements `CodegenConfig`.
+The `AndroidSyncClientGenerator.java` has comments in it--lots of comments.  There is no good substitute
+for reading the code more, though.  See how the `AndroidSyncClientGenerator` implements `CodegenConfig`.
 That class has the signature of all values that can be overridden.
 
 For the templates themselves, you have a number of values available to you for generation.
@@ -67,7 +67,7 @@ the object you have available during client generation:
 # -DdebugOperations prints operations passed to the template engine
 # -DdebugSupportingFiles prints additional data passed to the template engine
 
-java -DdebugOperations -cp /path/to/swagger-codegen-distribution:/path/to/your/jar io.swagger.codegen.Codegen -l AndroidClientCodegen -o ./test
+java -DdebugOperations -cp /path/to/swagger-codegen-distribution:/path/to/your/jar io.swagger.codegen.Codegen -l AndroidSyncClient -o ./test
 ```
 
 Will, for example, output the debug info for operations.  You can use this info

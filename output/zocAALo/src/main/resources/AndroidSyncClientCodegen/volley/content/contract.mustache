@@ -5,15 +5,22 @@ import android.net.Uri;
 import android.content.ContentResolver;
 
 /**
- *
- * Application: {{appName}} - {{appVersion}}
- * Contact:     {{infoEmail}} - {{infoUrl}}
- *
- */
+*
+* Application: {{appName}} - {{appVersion}}
+* Contact:     {{infoEmail}} - {{infoUrl}}
+*
+*/
 
 public class Contract {
 
     public static final String LOG_TAG = Contract.class.getSimpleName();
+
+{{#swagger}}
+    // {{vendorExtensions.x-android-sync-content-authority}} // cav
+    // {{vendorExtensions.x-android-sync-content-authority2}} // cav
+    // {{vendorExtensions.x-android-sync}} // cav
+    // {{{vendorExtensions.x-android-sync}}} // cav
+{{/swagger}}
 
 {{#swagger}}
     // The "Content authority" is a name for the entire content provider, similar to the
@@ -21,23 +28,11 @@ public class Contract {
     // content authority is the package name for the app, which is guaranteed to be unique on the
     // device.
     public static final String CONTENT_AUTHORITY = "{{vendorExtensions.x-android-sync-content-authority}}";
-    public static final String CONTENT_AUTHORITY2 = "{{vendorExtensions.x-android-sync-content-authority2}}";
-    {{#vendorExtensions.x-android-sync}}
-    // a {{vendorExtensions.x-content-authority}}
-    // b {{vendorExtensions.x-android-sync.vendorExtensions.x-content-authority}}
-    {{#vendorExtensions.x-android-sync.vendorExtensions.x-content-authority}}
-    // c
-    {{/vendorExtensions.x-android-sync.vendorExtensions.x-content-authority}}
-    {{/vendorExtensions.x-android-sync}}
-    // d {{{vendorExtensions.x-android-sync}}}
-    // e {{vendorExtensions.x-android-sync}}
-    // g {{{vendorExtensions.x-android-sync.x-content-authority}}}
 
     // Use CONTENT_AUTHORITY to create the base of all URI's which apps will use to contact
     // the content provider.
     public static final Uri BASE_CONTENT_URI = Uri.parse("content://" + CONTENT_AUTHORITY);
 {{/swagger}}
-
 {{#models}}
     {{#model}}{{#vendorExtensions.x-android-sync-table}}
     public static final String PATH_{{vendorExtensions.x-android-sync-table.toUpperCase}} = "{{vendorExtensions.x-android-sync-table}}";
@@ -66,11 +61,11 @@ public class Contract {
 
         // Table name
         public static final String TABLE_NAME = "{{vendorExtensions.x-android-sync-table}}";
-    {{#vars}}
-        {{^vendorExtensions.x-android-transient}}
+        {{#vars}}
+            {{^vendorExtensions.x-android-transient}}
         public static final String COLUMN_{{name.toUpperCase}} = "{{name}}";
-        {{/vendorExtensions.x-android-transient}}
-    {{/vars}}
+            {{/vendorExtensions.x-android-transient}}
+        {{/vars}}
 
     }
     {{/vendorExtensions.x-android-sync-table}}

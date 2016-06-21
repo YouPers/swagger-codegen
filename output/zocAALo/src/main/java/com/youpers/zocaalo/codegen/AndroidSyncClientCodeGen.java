@@ -11,10 +11,9 @@ import io.swagger.models.Swagger;
 import java.util.*;
 import java.io.File;
 
-public class AndroidClientCodegenGenerator extends AndroidClientCodegen {
+public class AndroidSyncClientCodeGen extends AndroidClientCodegen {
 
     // source folder where to write the files
-//    protected String sourceFolder = "src";
     protected String apiVersion = "1.0.0";
 
     protected String syncPackage = "io.swagger.client.sync";
@@ -28,7 +27,7 @@ public class AndroidClientCodegenGenerator extends AndroidClientCodegen {
      * @return the friendly name for the generator
      */
     public String getName() {
-        return "AndroidClientCodegen";
+        return "AndroidSyncClient";
     }
 
     /**
@@ -38,20 +37,21 @@ public class AndroidClientCodegenGenerator extends AndroidClientCodegen {
      * @return A string value for the help message
      */
     public String getHelp() {
-        return "Generates a AndroidClientCodegen client library.";
+        return "Generates a AndroidSyncClient client library.";
     }
 
-    public AndroidClientCodegenGenerator() {
+    public AndroidSyncClientCodeGen() {
         super();
 
         // set the output folder here
-        outputFolder = "generated-code/AndroidClientCodegen";
+        outputFolder = "generated-code/AndroidSyncClient";
 
         /**
          * Template Location.  This is the location which templates will be read from.  The generator
          * will use the resource stream to attempt to read the templates.
          */
-        templateDir = "AndroidClientCodegen";
+//        templateDir = "AndroidSyncClientCodegen";
+//        embeddedTemplateDir = templateDir = "AndroidSyncClientCodegen/volley";
 
         /**
          * Additional Properties.  These values can be passed to the templates and
