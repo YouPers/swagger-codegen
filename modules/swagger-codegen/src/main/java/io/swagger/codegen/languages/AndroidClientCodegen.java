@@ -1,6 +1,5 @@
 package io.swagger.codegen.languages;
 
-import io.swagger.codegen.CodegenOperation;
 import io.swagger.codegen.CliOption;
 import io.swagger.codegen.CodegenConfig;
 import io.swagger.codegen.CodegenConstants;
@@ -8,14 +7,9 @@ import io.swagger.codegen.CodegenParameter;
 import io.swagger.codegen.CodegenType;
 import io.swagger.codegen.DefaultCodegen;
 import io.swagger.codegen.SupportingFile;
-import io.swagger.models.Model;
-import io.swagger.models.Operation;
-import io.swagger.models.Swagger;
 import io.swagger.models.properties.ArrayProperty;
 import io.swagger.models.properties.MapProperty;
 import io.swagger.models.properties.Property;
-
-import java.util.*;
 
 import java.io.File;
 import java.util.Arrays;
@@ -38,9 +32,6 @@ public class AndroidClientCodegen extends DefaultCodegen implements CodegenConfi
 
     // requestPackage and authPackage are used by the "volley" template/library
     protected String requestPackage = "io.swagger.client.request";
-    protected String syncPackage = "io.swagger.client.sync";
-    protected String observerPackage = "io.swagger.client.observer";
-    protected String contentPackage = "io.swagger.client.content";
     protected String authPackage = "io.swagger.client.auth";
     protected String gradleWrapperPackage = "gradle.wrapper";
     protected String apiDocPath = "docs/";
@@ -457,14 +448,6 @@ public class AndroidClientCodegen extends DefaultCodegen implements CodegenConfi
                 (sourceFolder + File.separator + invokerPackage).replace(".", File.separator), "JsonUtil.java"));
         supportingFiles.add(new SupportingFile("apiException.mustache",
                 (sourceFolder + File.separator + invokerPackage).replace(".", File.separator), "ApiException.java"));
-        supportingFiles.add(new SupportingFile("sync/syncAdapter.mustache",
-                (sourceFolder + File.separator + syncPackage).replace(".", File.separator), "SyncAdapter.java"));
-        supportingFiles.add(new SupportingFile("sync/syncService.mustache",
-                (sourceFolder + File.separator + syncPackage).replace(".", File.separator), "SyncService.java"));
-        supportingFiles.add(new SupportingFile("observer/observer.mustache",
-                (sourceFolder + File.separator + observerPackage).replace(".", File.separator), "Observer.java"));
-        supportingFiles.add(new SupportingFile("content/contract.mustache",
-                (sourceFolder + File.separator + contentPackage).replace(".", File.separator), "Contract.java"));
         supportingFiles.add(new SupportingFile("Pair.mustache",
                 (sourceFolder + File.separator + invokerPackage).replace(".", File.separator), "Pair.java"));
         supportingFiles.add(new SupportingFile("request/getrequest.mustache",
@@ -519,12 +502,6 @@ public class AndroidClientCodegen extends DefaultCodegen implements CodegenConfi
 
     public void setSourceFolder(String sourceFolder) {
         this.sourceFolder = sourceFolder;
-    }
-
-    @Override
-    public CodegenOperation fromOperation(String resourcePath, String httpMethod, Operation operation, Map<String, Model> definitions, Swagger swagger) {
-        CodegenOperation op = super.fromOperation(resourcePath, httpMethod, operation, definitions, swagger);
-        return op;
     }
 
 }

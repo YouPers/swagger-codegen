@@ -1,0 +1,2 @@
+#!/usr/bin/env bash
+java -cp output/zocAALo/target/AndroidClientCodegen-swagger-codegen-1.0.0.jar:modules/swagger-codegen-cli/target/swagger-codegen-cli.jar io.swagger.codegen.Codegen generate -l AndroidClientCodegen -i /Volumes/SaSSDT1/Development/zocAALo/loc8r/app_api/doc/swagger.json -o /Volumes/SaSSDT1/Development/zocAALo/Android/Swagger/loc8r-api
