@@ -1,9 +1,5 @@
 package {{invokerPackage}}.content;
 
-import android.provider.BaseColumns;
-import android.net.Uri;
-import android.content.ContentResolver;
-
 /**
 *
 * Application: {{appName}} - {{appVersion}}
@@ -18,7 +14,7 @@ public class TableHelper {
 {{#models}}
     {{#model}}
         {{#vendorExtensions.x-android-sync-table}}
-    public class {{vendorExtensions.x-android-sync-table}}ColumnIndices {
+    public static class {{vendorExtensions.x-android-sync-table}}ColumnIndices {
         public int COL_IDX_LOCAL_ID;
         public int COL_IDX_BACKEND_ID;
             {{#vars}}
@@ -33,8 +29,8 @@ public class TableHelper {
         public int COL_IDX_SYNC_TO_DELETE;
         public int COL_IDX_MARKED_AS_DELETED;
     }
+
         {{/vendorExtensions.x-android-sync-table}}
     {{/model}}
 {{/models}}
-
 }

@@ -70,6 +70,8 @@ public class AndroidSyncClientCodeGen extends AndroidClientCodegen {
     @Override
     public void processOpts() {
         super.processOpts();
+        modelTemplateFiles.put("content/tableHelper.mustache", ".javax");
+
         supportingFiles.add(new SupportingFile("sync/syncAdapter.mustache",
                 (sourceFolder + File.separator + syncPackage).replace(".", File.separator), "SyncAdapter.java"));
         supportingFiles.add(new SupportingFile("sync/syncService.mustache",
