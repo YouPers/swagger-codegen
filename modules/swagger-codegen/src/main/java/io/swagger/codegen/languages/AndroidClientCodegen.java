@@ -13,6 +13,7 @@ import io.swagger.models.properties.Property;
 
 import java.io.File;
 import java.util.Arrays;
+import java.util.List;
 import java.util.HashSet;
 
 import org.apache.commons.lang3.StringUtils;
