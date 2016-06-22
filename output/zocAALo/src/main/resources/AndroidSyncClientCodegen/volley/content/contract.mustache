@@ -54,6 +54,7 @@ public class Contract {
 
         // Table name
         public static final String TABLE_NAME = "{{vendorExtensions.x-android-sync-table}}";
+
         {{#vars}}
             {{^vendorExtensions.x-android-transient}}
         public static final String COLUMN_{{name.toUpperCase}} = "{{name}}";

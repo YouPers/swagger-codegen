@@ -1,0 +1,40 @@
+package {{invokerPackage}}.content;
+
+import android.provider.BaseColumns;
+import android.net.Uri;
+import android.content.ContentResolver;
+
+/**
+*
+* Application: {{appName}} - {{appVersion}}
+* Contact:     {{infoEmail}} - {{infoUrl}}
+*
+*/
+
+public class TableHelper {
+
+    public static final String LOG_TAG = TableHelper.class.getSimpleName();
+
+{{#models}}
+    {{#model}}
+        {{#vendorExtensions.x-android-sync-table}}
+    public class {{vendorExtensions.x-android-sync-table}}ColumnIndices {
+        public int COL_IDX_LOCAL_ID;
+        public int COL_IDX_BACKEND_ID;
+            {{#vars}}
+        {{^vendorExtensions.x-android-transient}}
+        public int COL_IDX_{{name.toUpperCase}};
+        {{/vendorExtensions.x-android-transient}}
+            {{/vars}}
+        public int COL_IDX_BACKEND_VERSION_ID;
+        public int COL_IDX_BACKEND_CREATED_AT;
+        public int COL_IDX_BACKEND_UPDATED_AT;
+        public int COL_IDX_SYNC_TO_UPDATE;
+        public int COL_IDX_SYNC_TO_DELETE;
+        public int COL_IDX_MARKED_AS_DELETED;
+    }
+        {{/vendorExtensions.x-android-sync-table}}
+    {{/model}}
+{{/models}}
+
+}
