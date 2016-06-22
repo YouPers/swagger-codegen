@@ -1,0 +1,139 @@
+package {{invokerPackage}}.content;
+
+import android.content.ContentValues;
+import android.database.Cursor;
+
+import java.math.BigDecimal;
+import java.util.Date;
+
+import io.swagger.client.ApiException;
+import io.swagger.client.ApiInvoker;
+import io.swagger.client.content.TableHelper;
+{{#models}}
+    {{#model}}
+import io.swagger.client.model.{{model.classname}};
+    {{/model}}
+{{/models}}
+
+/**
+*
+* Application: {{appName}} - {{appVersion}}
+* Contact:     {{infoEmail}} - {{infoUrl}}
+*
+*/
+
+public class DataUtils {
+
+    public static final String LOG_TAG = DataUtils.class.getSimpleName();
+
+{{#models}}
+    {{#model}}
+        {{#vendorExtensions.x-android-sync-table}}
+    public static TableHelper.{{model.classname}}ColumnIndices get{{model.classname}}ColumnIndices (Cursor cursor) {
+        TableHelper.{{model.classname}}ColumnIndices columnIndices = new TableHelper.{{model.classname}}ColumnIndices();
+
+        columnIndices.COL_IDX_LOCAL_ID = cursor.getColumnIndex(Contract.{{model.classname}}Entry._ID);
+        columnIndices.COL_IDX_BACKEND_ID = cursor.getColumnIndex(Contract.Generic.COLUMN_BACKEND_ID);
+            {{#vars}}
+        {{^vendorExtensions.x-android-transient}}
+        columnIndices.COL_IDX_{{name.toUpperCase}} = cursor.getColumnIndex(Contract.{{model.classname}}Entry.COLUMN_{{name.toUpperCase}});
+        {{/vendorExtensions.x-android-transient}}
+            {{/vars}}
+        columnIndices.COL_IDX_BACKEND_VERSION_ID = cursor.getColumnIndex(Contract.Generic.COLUMN_BACKEND_VERSION_ID);
+        columnIndices.COL_IDX_BACKEND_CREATED_AT = cursor.getColumnIndex(Contract.Generic.COLUMN_BACKEND_CREATED_AT);
+        columnIndices.COL_IDX_BACKEND_UPDATED_AT = cursor.getColumnIndex(Contract.Generic.COLUMN_BACKEND_UPDATED_AT);
+        columnIndices.COL_IDX_SYNC_TO_UPDATE = cursor.getColumnIndex(Contract.Generic.COLUMN_SYNC_TO_UPDATE);
+        columnIndices.COL_IDX_SYNC_TO_DELETE = cursor.getColumnIndex(Contract.Generic.COLUMN_SYNC_TO_DELETE);
+        columnIndices.COL_IDX_MARKED_AS_DELETED = cursor.getColumnIndex(Contract.Generic.COLUMN_MARKED_AS_DELETED);
+
+        return columnIndices;
+    }
+
+    public static {{model.name}} get{{vendorExtensions.x-android-sync-table}}FromContentValues(Cursor cursor, TableHelper.{{model.classname}}ColumnIndices {{model.classname.toLowerCase}}ColumnIndices) {
+        {{model.name}} {{model.name.toLowerCase}} = new {{model.name}}();
+
+        if (!cursor.isNull({{model.classname.toLowerCase}}ColumnIndices.COL_IDX_BACKEND_ID)) {
+            // we need the UUID of the backend server and not the locally used id
+            {{model.name.toLowerCase}}.setId(cursor.getString({{model.classname.toLowerCase}}ColumnIndices.COL_IDX_BACKEND_ID));
+        }
+
+        if (!cursor.isNull({{model.classname.toLowerCase}}ColumnIndices.COL_IDX_BACKEND_VERSION_ID)) {
+            {{model.name.toLowerCase}}.setVersionID(cursor.getString({{model.classname.toLowerCase}}ColumnIndices.COL_IDX_BACKEND_VERSION_ID));
+        }
+
+        if (!cursor.isNull({{model.classname.toLowerCase}}ColumnIndices.COL_IDX_BACKEND_CREATED_AT)) {
+            {{model.name.toLowerCase}}.setCreatedAt(new Date(cursor.getLong({{model.classname.toLowerCase}}ColumnIndices.COL_IDX_BACKEND_CREATED_AT)));
+        }
+
+        if (!cursor.isNull({{model.classname.toLowerCase}}ColumnIndices.COL_IDX_BACKEND_UPDATED_AT)) {
+            {{model.name.toLowerCase}}.setUpdatedAt(new Date(cursor.getLong({{model.classname.toLowerCase}}ColumnIndices.COL_IDX_BACKEND_UPDATED_AT)));
+        }
+
+    {{#vars}}
+        {{^vendorExtensions.x-android-transient}}
+            {{#isString}}
+        if (!cursor.isNull({{model.classname.toLowerCase}}ColumnIndices.COL_IDX_{{name.toUpperCase}})) {
+            {{model.classname.toLowerCase}}.{{setter}}(cursor.getString({{model.classname.toLowerCase}}ColumnIndices.COL_IDX_{{name.toUpperCase}}));
+        }
+            {{/isString}}
+            {{#isDouble}}
+        if (!cursor.isNull({{model.classname.toLowerCase}}ColumnIndices.COL_IDX_{{name.toUpperCase}})) {
+            {{model.classname.toLowerCase}}.{{setter}}(cursor.getDouble({{model.classname.toLowerCase}}ColumnIndices.COL_IDX_{{name.toUpperCase}}));
+        }
+            {{/isDouble}}
+            {{#isFloat}}
+        if (!cursor.isNull({{model.classname.toLowerCase}}ColumnIndices.COL_IDX_{{name.toUpperCase}})) {
+            {{model.classname.toLowerCase}}.{{setter}}(new BigDecimal(cursor.getString({{model.classname.toLowerCase}}ColumnIndices.COL_IDX_{{name.toUpperCase}})));
+        }
+            {{/isFloat}}
+            {{^isPrimitiveType}}
+        if (!cursor.isNull({{model.classname.toLowerCase}}ColumnIndices.COL_IDX_{{name.toUpperCase}})) {
+            try {
+                {{model.classname.toLowerCase}}.{{setter}}(({{baseType}}) ApiInvoker.deserialize(cursor.getString({{model.classname.toLowerCase}}ColumnIndices.COL_IDX_{{name.toUpperCase}}), null, {{baseType}}.class));
+            } catch (ApiException e) {
+                e.printStackTrace();
+            }
+        }
+            {{/isPrimitiveType}}
+
+        {{/vendorExtensions.x-android-transient}}
+    {{/vars}}
+
+        return {{model.name.toLowerCase}};
+    }
+
+    public static final class {{model.classname}}Entry {
+
+        public static ContentValues getContentValues({{model.classname}} {{model.classname.toLowerCase}}) throws ApiException {
+            ContentValues {{model.classname.toLowerCase}}Values = new ContentValues();
+
+            // pass values separately for SQLite DB
+            if (null != {{model.classname.toLowerCase}}.getId())
+                {{model.classname.toLowerCase}}Values.put(Contract.Generic.COLUMN_BACKEND_ID, {{model.classname.toLowerCase}}.getId());
+            if (null != {{model.classname.toLowerCase}}.getVersionID())
+                {{model.classname.toLowerCase}}Values.put(Contract.Generic.COLUMN_BACKEND_VERSION_ID, {{model.classname.toLowerCase}}.getVersionID());
+            if (null != {{model.classname.toLowerCase}}.getCreatedAt())
+                {{model.classname.toLowerCase}}Values.put(Contract.Generic.COLUMN_BACKEND_CREATED_AT, {{model.classname.toLowerCase}}.getCreatedAt().getTime());
+            if (null != {{model.classname.toLowerCase}}.getUpdatedAt())
+                {{model.classname.toLowerCase}}Values.put(Contract.Generic.COLUMN_BACKEND_UPDATED_AT, {{model.classname.toLowerCase}}.getUpdatedAt().getTime());
+    {{#vars}}
+        {{^vendorExtensions.x-android-transient}}
+            {{#isPrimitiveType}}
+            if (null != {{model.classname.toLowerCase}}.{{getter}}())
+                {{model.classname.toLowerCase}}Values.put(Contract.{{model.classname}}Entry.COLUMN_{{name.toUpperCase}}, {{model.classname.toLowerCase}}.{{getter}}());
+            {{/isPrimitiveType}}
+            {{^isPrimitiveType}}
+            if (null != {{model.classname.toLowerCase}}.{{getter}}())
+                {{model.classname.toLowerCase}}Values.put(Contract.{{model.classname}}Entry.COLUMN_{{name.toUpperCase}}, ApiInvoker.serialize({{model.classname.toLowerCase}}.{{getter}}()));
+            {{/isPrimitiveType}}
+        {{/vendorExtensions.x-android-transient}}
+    {{/vars}}
+
+            return {{model.classname.toLowerCase}}Values;
+        }
+    }
+
+        {{/vendorExtensions.x-android-sync-table}}
+    {{/model}}
+{{/models}}
+}

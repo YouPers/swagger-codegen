@@ -14,7 +14,7 @@ public class TableHelper {
 {{#models}}
     {{#model}}
         {{#vendorExtensions.x-android-sync-table}}
-    public static class {{vendorExtensions.x-android-sync-table}}ColumnIndices {
+    public static class {{model.classname}}ColumnIndices {
         public int COL_IDX_LOCAL_ID;
         public int COL_IDX_BACKEND_ID;
             {{#vars}}

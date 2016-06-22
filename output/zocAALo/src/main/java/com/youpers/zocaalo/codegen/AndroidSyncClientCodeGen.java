@@ -82,6 +82,8 @@ public class AndroidSyncClientCodeGen extends AndroidClientCodegen {
                 (sourceFolder + File.separator + contentPackage).replace(".", File.separator), "Contract.java"));
         supportingFiles.add(new SupportingFile("content/tableHelper.mustache",
                 (sourceFolder + File.separator + contentPackage).replace(".", File.separator), "TableHelper.java"));
+        supportingFiles.add(new SupportingFile("content/dataUtils.mustache",
+                (sourceFolder + File.separator + contentPackage).replace(".", File.separator), "DataUtils.java"));
     }
 
     @Override

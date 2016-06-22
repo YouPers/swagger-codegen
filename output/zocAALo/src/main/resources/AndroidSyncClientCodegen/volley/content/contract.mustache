@@ -28,7 +28,7 @@ public class Contract {
 {{/swagger}}
 {{#models}}
     {{#model}}{{#vendorExtensions.x-android-sync-table}}
-    public static final String PATH_{{vendorExtensions.x-android-sync-table.toUpperCase}} = "{{vendorExtensions.x-android-sync-table}}";
+    public static final String PATH_{{vendorExtensions.x-android-sync-table.toUpperCase}} = "{{vendorExtensions.x-android-sync-table.toLowerCase}}";
     {{/vendorExtensions.x-android-sync-table}}
     {{/model}}
 {{/models}}
@@ -45,7 +45,7 @@ public class Contract {
 
 {{#models}}
     {{#model}}{{#vendorExtensions.x-android-sync-table}}
-    public static final class {{vendorExtensions.x-android-sync-table}}Entry implements BaseColumns {
+    public static final class {{model.classname}}Entry implements BaseColumns {
 
         public static final Uri CONTENT_URI = BASE_CONTENT_URI.buildUpon().appendPath(PATH_{{vendorExtensions.x-android-sync-table.toUpperCase}}).build();
 
