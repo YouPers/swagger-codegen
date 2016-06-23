@@ -25,6 +25,7 @@ public class AndroidSyncClientCodeGen extends AndroidClientCodegen {
     protected String syncPackage = "io.swagger.client.sync";
     protected String observerPackage = "io.swagger.client.observer";
     protected String contentPackage = "io.swagger.client.content";
+    protected String authenticationPackage = "io.swagger.client.authentication";
 
     /**
      * Configures a friendly name for the generator.  This will be used by the generator
@@ -113,6 +114,7 @@ public class AndroidSyncClientCodeGen extends AndroidClientCodegen {
                     syncPackage = sync.getPackageName() + ".sync";
                     observerPackage = sync.getPackageName() + ".observer";
                     contentPackage = sync.getPackageName() + ".content";
+                    authenticationPackage = sync.getPackageName() + ".authentication";
 
                     /**
                      * we need first to remove already added supporting files as they have the wrong package
@@ -184,6 +186,14 @@ public class AndroidSyncClientCodeGen extends AndroidClientCodegen {
                             (sourceFolder + File.separator + contentPackage).replace(".", File.separator), "Provider.java"));
                     supportingFiles.add(new SupportingFile("content/dataUtils.mustache",
                             (sourceFolder + File.separator + contentPackage).replace(".", File.separator), "DataUtils.java"));
+                    supportingFiles.add(new SupportingFile("authentication/authenticator.mustache",
+                            (sourceFolder + File.separator + authenticationPackage).replace(".", File.separator), "Authenticator.java"));
+                    supportingFiles.add(new SupportingFile("authentication/authenticatorService.mustache",
+                            (sourceFolder + File.separator + authenticationPackage).replace(".", File.separator), "AuthenticatorService.java"));
+
+                    supportingFiles.add(new SupportingFile("valuesstrings.mustache", projectFolder + File.separator + "res" + File.separator + "values", "strings.xml"));
+                    supportingFiles.add(new SupportingFile("authenticator.mustache", projectFolder + File.separator + "res" + File.separator + "xml", "authenticator.xml"));
+                    supportingFiles.add(new SupportingFile("syncadapter.mustache", projectFolder + File.separator + "res" + File.separator + "xml", "syncadapter.xml"));
 
 
                 } catch (IOException e) {

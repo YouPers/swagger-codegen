@@ -11,6 +11,7 @@ import android.content.SyncResult;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
+import {{invokerPackage}}.R;
 
 /**
 *
@@ -67,7 +68,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
         bundle.putBoolean(SYNC_INITIAL_LOAD_FROM_SERVER, true);
 
         ContentResolver.requestSync(getSyncAccount(context),
-                "{{#swagger}}{{vendorExtensions.x-android-sync-content-authority}}{{/swagger}}", bundle);
+            context.getString(R.string.content_authority), bundle);
     }
 
 
@@ -85,8 +86,8 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
         bundle.putBoolean(SYNC_UPLOAD_MANY_{{model.classname.toUpperCase}}S_TO_SERVER, true);
 
         ContentResolver.requestSync(getSyncAccount(context),
-                "{{#swagger}}{{vendorExtensions.x-android-sync-content-authority}}{{/swagger}}", bundle);
-        }
+                context.getString(R.string.content_authority), bundle);
+    }
 
         {{/vendorExtensions.x-android-sync-table}}
     {{/model}}
@@ -107,8 +108,9 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
 
         // Create the account type and default account
         Account newAccount = new Account(
-                "{{#swagger}}{{vendorExtensions.x-android-sync-account-name}}{{/swagger}}",
-                "{{#swagger}}{{vendorExtensions.x-android-sync-account-type}}{{/swagger}}");
+                context.getString(R.string.account_name),
+                context.getString(R.string.sync_account_type)
+        );
 
         // If the password doesn't exist, the account doesn't exist
         if (null == accountManager.getPassword(newAccount)) {
@@ -141,7 +143,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
         /*
          * Without calling setSyncAutomatically, our periodic sync will not be enabled.
          */
-        ContentResolver.setSyncAutomatically(newAccount, "{{#swagger}}{{vendorExtensions.x-android-sync-content-authority}}{{/swagger}}", true);
+        ContentResolver.setSyncAutomatically(newAccount, context.getString(R.string.content_authority), true);
 
         /*
          * Finally, let's do a sync to get things started
@@ -154,7 +156,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
      */
     public static void configurePeriodicSync(Context context, int syncInterval, int flexTime) {
         Account account = getSyncAccount(context);
-        String authority = "{{#swagger}}{{vendorExtensions.x-android-sync-content-authority}}{{/swagger}}";
+        String authority = context.getString(R.string.content_authority);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
             // we can enable inexact timers in our periodic sync
             SyncRequest request = new SyncRequest.Builder().
