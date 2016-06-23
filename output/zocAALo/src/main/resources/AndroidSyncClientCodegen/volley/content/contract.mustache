@@ -28,9 +28,12 @@ public class Contract {
     public static final Uri BASE_CONTENT_URI = Uri.parse("content://" + CONTENT_AUTHORITY);
 {{/swagger}}
 {{#models}}
-    {{#model}}{{#vendorExtensions.x-android-sync-table}}
-    public static final String PATH_{{vendorExtensions.x-android-sync-table.toUpperCase}} = "{{vendorExtensions.x-android-sync-table.toLowerCase}}";
-    {{/vendorExtensions.x-android-sync-table}}
+    {{#model}}
+        {{#vendorExtensions.x-android-sync-table}}
+    public static final String PATH_{{model.classname.toUpperCase}}S = "{{model.classname.toLowerCase}}";
+    public static final String PATH_{{model.classname.toUpperCase}}S_TO_BE_UPLOADED = "{{model.classname.toLowerCase}}sToBeUploaded";
+    public static final String PATH_{{model.classname.toUpperCase}}_FROM_SERVER = "{{model.classname.toLowerCase}}FromServer";
+        {{/vendorExtensions.x-android-sync-table}}
     {{/model}}
 {{/models}}
 
@@ -45,20 +48,27 @@ public class Contract {
     }
 
 {{#models}}
-    {{#model}}{{#vendorExtensions.x-android-sync-table}}
+    {{#model}}
+        {{#vendorExtensions.x-android-sync-table}}
     public static final class {{model.classname}}Entry implements BaseColumns {
 
-        public static final Uri CONTENT_URI = BASE_CONTENT_URI.buildUpon().appendPath(PATH_{{vendorExtensions.x-android-sync-table.toUpperCase}}).build();
+        public static final Uri CONTENT_URI = BASE_CONTENT_URI.buildUpon().appendPath(PATH_{{model.classname.toUpperCase}}S).build();
 
-        public static final String CONTENT_DIR_TYPE = ContentResolver.CURSOR_DIR_BASE_TYPE + "/" + CONTENT_AUTHORITY + "/" + PATH_{{vendorExtensions.x-android-sync-table.toUpperCase}};
-        public static final String CONTENT_ITEM_TYPE = ContentResolver.CURSOR_ITEM_BASE_TYPE + "/" + CONTENT_AUTHORITY + "/" + PATH_{{vendorExtensions.x-android-sync-table.toUpperCase}};
+        public static final Uri CONTENT_URI_{{model.classname.toUpperCase}}_FROM_SERVER =
+                BASE_CONTENT_URI.buildUpon().appendPath(PATH_{{model.classname.toUpperCase}}_FROM_SERVER).build();
+
+        public static final Uri CONTENT_URI_{{model.classname.toUpperCase}}S_TO_BE_UPLOADED =
+                BASE_CONTENT_URI.buildUpon().appendPath(PATH_{{model.classname.toUpperCase}}S_TO_BE_UPLOADED).build();
+
+        public static final String CONTENT_DIR_TYPE = ContentResolver.CURSOR_DIR_BASE_TYPE + "/" + CONTENT_AUTHORITY + "/" + PATH_{{model.classname.toUpperCase}}S;
+        public static final String CONTENT_ITEM_TYPE = ContentResolver.CURSOR_ITEM_BASE_TYPE + "/" + CONTENT_AUTHORITY + "/" + PATH_{{model.classname.toUpperCase}}S;
 
         public static Uri build{{model.classname}}sCreate(long id) {
             return ContentUris.withAppendedId(CONTENT_URI, id);
         }
 
         // Table name
-        public static final String TABLE_NAME = "{{vendorExtensions.x-android-sync-table}}";
+        public static final String TABLE_NAME = "{{model.classname}}";
 
         {{#vars}}
             {{^vendorExtensions.x-android-transient}}
@@ -67,7 +77,7 @@ public class Contract {
         {{/vars}}
 
     }
-    {{/vendorExtensions.x-android-sync-table}}
+        {{/vendorExtensions.x-android-sync-table}}
     {{/model}}
 {{/models}}
 
