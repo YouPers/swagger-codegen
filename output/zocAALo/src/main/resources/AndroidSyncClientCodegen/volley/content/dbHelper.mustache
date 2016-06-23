@@ -1,0 +1,96 @@
+package {{invokerPackage}}.content;
+
+import android.content.Context;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
+
+import {{invokerPackage}}.content.Contract;
+
+/**
+*
+* Application: {{appName}} - {{appVersion}}
+* Contact:     {{infoEmail}} - {{infoUrl}}
+*
+*/
+
+public class DBHelper extends SQLiteOpenHelper {
+
+    public static final String LOG_TAG = DBHelper.class.getSimpleName();
+
+{{#swagger}}
+    static final String DATABASE_NAME = "{{vendorExtensions.x-android-sync-db-name}}";
+    private static final int DATABASE_VERSION = {{vendorExtensions.x-android-sync-db-version}};
+{{/swagger}}
+
+    public DBHelper(Context context) {
+        super(context, DATABASE_NAME, null, DATABASE_VERSION);
+    }
+
+    @Override
+    public void onCreate(SQLiteDatabase db) {
+
+{{#models}}
+    {{#model}}
+        {{#vendorExtensions.x-android-sync-table}}
+        /**
+         * SQL statement to create {{model.name}} table
+         */
+
+        final String SQL_CREATE_{{model.name.toUpperCase}}_TABLE = "CREATE TABLE " + Contract.{{model.name}}Entry.TABLE_NAME + " (" +
+            Contract.{{model.name}}Entry._ID + " INTEGER PRIMARY KEY" +
+                ", " +
+            Contract.Generic.COLUMN_BACKEND_ID + " TEXT" +
+                ", " +
+            Contract.Generic.COLUMN_BACKEND_VERSION_ID + " TEXT" +
+                ", " +
+            Contract.Generic.COLUMN_BACKEND_CREATED_AT + " INTEGER" +
+                ", " +
+            Contract.Generic.COLUMN_BACKEND_UPDATED_AT + " INTEGER" +
+                ", " +
+            Contract.Generic.COLUMN_SYNC_TO_UPDATE + " INTEGER" +
+                ", " +
+            Contract.Generic.COLUMN_SYNC_TO_DELETE + " INTEGER" +
+                ", " +
+            Contract.Generic.COLUMN_MARKED_AS_DELETED + " INTEGER" +
+        {{#vars}}
+            {{^vendorExtensions.x-android-transient}}
+                ", " +
+                {{#isString}}
+            Contract.{{model.name}}Entry.COLUMN_{{name.toUpperCase}} + " TEXT" +
+                {{/isString}}
+                {{#isDouble}}
+            Contract.{{model.name}}Entry.COLUMN_{{name.toUpperCase}} + " REAL" +
+                {{/isDouble}}
+                {{#isFloat}}
+            Contract.{{model.name}}Entry.COLUMN_{{name.toUpperCase}} + " REAL" +
+                {{/isFloat}}
+                {{^isPrimitiveType}}
+                    {{^isFloat}}
+            Contract.{{model.name}}Entry.COLUMN_{{name.toUpperCase}} + " TEXT" +
+                    {{/isFloat}}
+                {{/isPrimitiveType}}
+            {{/vendorExtensions.x-android-transient}}
+        {{/vars}}
+            " );";
+
+        db.execSQL(SQL_CREATE_{{model.name.toUpperCase}}_TABLE);
+
+        {{/vendorExtensions.x-android-sync-table}}
+    {{/model}}
+{{/models}}
+    }
+
+    @Override
+    public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+
+{{#models}}
+    {{#model}}
+        {{#vendorExtensions.x-android-sync-table}}
+        db.execSQL("DROP TABLE IF EXISTS " + Contract.{{model.name}}Entry.TABLE_NAME);
+        {{/vendorExtensions.x-android-sync-table}}
+    {{/model}}
+{{/models}}
+        onCreate(db);
+
+    }
+}

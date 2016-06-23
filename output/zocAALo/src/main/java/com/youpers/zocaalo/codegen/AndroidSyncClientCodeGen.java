@@ -97,6 +97,8 @@ public class AndroidSyncClientCodeGen extends AndroidClientCodegen {
                     System.out.println("x-android-sync (Author): " + sync.getAuthor());
                     swagger.setVendorExtension("x-android-sync-content-authority", sync.getContentAuthority());
                     swagger.setVendorExtension("x-android-sync-package-name", sync.getPackageName());
+                    swagger.setVendorExtension("x-android-sync-db-name", sync.getDbName());
+                    swagger.setVendorExtension("x-android-sync-db-version", sync.getDbVersion());
 
                     this.setInvokerPackage(sync.getPackageName());
                     additionalProperties.put(CodegenConstants.INVOKER_PACKAGE, invokerPackage);
@@ -172,6 +174,8 @@ public class AndroidSyncClientCodeGen extends AndroidClientCodegen {
                             (sourceFolder + File.separator + contentPackage).replace(".", File.separator), "Contract.java"));
                     supportingFiles.add(new SupportingFile("content/tableHelper.mustache",
                             (sourceFolder + File.separator + contentPackage).replace(".", File.separator), "TableHelper.java"));
+                    supportingFiles.add(new SupportingFile("content/dbHelper.mustache",
+                            (sourceFolder + File.separator + contentPackage).replace(".", File.separator), "DBHelper.java"));
                     supportingFiles.add(new SupportingFile("content/dataUtils.mustache",
                             (sourceFolder + File.separator + contentPackage).replace(".", File.separator), "DataUtils.java"));
 
