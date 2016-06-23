@@ -1,0 +1,410 @@
+package {{invokerPackage}}.content;
+
+import android.annotation.TargetApi;
+import android.content.ContentProvider;
+import android.content.ContentUris;
+import android.content.ContentValues;
+import android.content.UriMatcher;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import android.graphics.PointF;
+import android.net.Uri;
+import android.util.Log;
+
+import {{invokerPackage}}.sync.SyncAdapter;
+
+/**
+ *
+ * Application: {{appName}} - {{appVersion}}
+ * Contact:     {{infoEmail}} - {{infoUrl}}
+ *
+ */
+
+import {{invokerPackage}}.content.Contract;
+import {{invokerPackage}}.content.DBHelper;
+
+
+public class Provider extends ContentProvider {
+
+    public static final String LOG_TAG = Provider.class.getSimpleName();
+
+    // The URI Matcher used by this content provider.
+    private static final UriMatcher sUriMatcher = buildUriMatcher();
+
+    private DBHelper mOpenHelper;
+
+{{#models}}
+    static final int {{model.classname.toUpperCase}} = {{-index}}00;
+    static final int {{model.classname.toUpperCase}}_WITH_LOCAL_ID = {{-index}}01;
+    static final int {{model.classname.toUpperCase}}_WITH_BACKEND_ID = {{-index}}02;
+{{/models}}
+
+    // all predefined query selections
+
+{{#models}}
+    {{#model}}
+        {{#vendorExtensions.x-android-sync-table}}
+    private static final String s{{model.classname}}WithUniqueValues =
+        Contract.{{model.classname}}Entry.TABLE_NAME + "." + Contract.Generic.COLUMN_BACKEND_ID + " = ? ";
+    private static final String s{{model.classname}}sToBeDownloadedFromServer =
+        Contract.{{model.classname}}Entry.TABLE_NAME + "." + Contract.Generic.COLUMN_SYNC_TO_UPDATE + " = ? ";
+
+        {{/vendorExtensions.x-android-sync-table}}
+    {{/model}}
+{{/models}}
+    @Override
+    public boolean onCreate() {
+
+        mOpenHelper = new DBHelper(getContext());
+        return true;
+    }
+
+    @Override
+    public Cursor query(Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
+        Cursor retCursor;
+
+        Log.d(LOG_TAG, "UriMatch query: " + Integer.toString(sUriMatcher.match(uri)));
+
+        switch (sUriMatcher.match(uri)) {
+{{#models}}
+    {{#model}}
+        {{#vendorExtensions.x-android-sync-table}}
+            case {{model.classname.toUpperCase}}: {
+                retCursor = mOpenHelper.getReadableDatabase().query(
+                        Contract.{{model.classname}}Entry.TABLE_NAME,
+                        projection,
+                        selection,
+                        selectionArgs,
+                        null,
+                        null,
+                        sortOrder
+                );
+                break;
+            }
+            case {{model.classname.toUpperCase}}_WITH_LOCAL_ID: {
+                selection =
+                    Contract.{{model.classname}}Entry.TABLE_NAME + "." + Contract.{{model.classname}}Entry._ID + " = ? ";
+                selectionArgs = new String[] {
+                    Long.toString(ContentUris.parseId(uri))
+                };
+                retCursor = mOpenHelper.getReadableDatabase().query(
+                        Contract.{{model.classname}}Entry.TABLE_NAME,
+                        projection,
+                        selection,
+                        selectionArgs,
+                        null,
+                        null,
+                        sortOrder
+                );
+                break;
+            }
+        {{/vendorExtensions.x-android-sync-table}}
+    {{/model}}
+{{/models}}
+            default:
+                throw new UnsupportedOperationException("Unknown uri: " + uri);
+        }
+
+        return retCursor;
+    }
+
+    @Override
+    public String getType(Uri uri) {
+        // Use the Uri Matcher to determine what kind of URI this is.
+        final int match = sUriMatcher.match(uri);
+
+        switch (match) {
+{{#models}}
+    {{#model}}
+        {{#vendorExtensions.x-android-sync-table}}
+            case {{model.classname.toUpperCase}}:
+                return Contract.{{model.classname}}Entry.CONTENT_DIR_TYPE;
+            case {{model.classname.toUpperCase}}_WITH_LOCAL_ID:
+                return Contract.{{model.classname}}Entry.CONTENT_ITEM_TYPE;
+            case {{model.classname.toUpperCase}}_WITH_BACKEND_ID:
+                return Contract.{{model.classname}}Entry.CONTENT_ITEM_TYPE;
+        {{/vendorExtensions.x-android-sync-table}}
+    {{/model}}
+{{/models}}
+            default:
+                throw new UnsupportedOperationException("Unknown uri: " + uri);
+        }
+    }
+
+    @Override
+    public Uri insert(Uri uri, ContentValues values) {
+        final SQLiteDatabase db = mOpenHelper.getWritableDatabase();
+        final int match = sUriMatcher.match(uri);
+        Log.d(LOG_TAG, "UriMatch insert: " + Integer.toString(match));
+        Uri returnUri = null;
+        long _id;
+
+        /**
+         * add the sync flags to instruct subsequent syncs and remove beforehand any sync flags already set
+         */
+        values.remove(Contract.Generic.COLUMN_SYNC_TO_UPDATE);
+        values.remove(Contract.Generic.COLUMN_SYNC_TO_DELETE);
+
+        values.put(Contract.Generic.COLUMN_SYNC_TO_UPDATE, true);
+        values.put(Contract.Generic.COLUMN_SYNC_TO_DELETE, false);
+
+        switch (match) {
+{{#models}}
+    {{#model}}
+        {{#vendorExtensions.x-android-sync-table}}
+            case {{model.classname.toUpperCase}}: {
+                _id = db.insert(Contract.{{model.classname}}Entry.TABLE_NAME, null, values);
+                if (_id > 0) {
+                    returnUri = Contract.{{model.classname}}Entry.build{{model.classname}}sCreate(_id);
+
+                    // {{model.classname}} has been inserted by app, thus we want to start an upload sync of the inserted location
+                    SyncAdapter.syncUpload{{model.classname}}s(getContext());
+
+                } else {
+                    throw new android.database.SQLException("Failed to insert row into " + uri);
+                }
+                break;
+            }
+        {{/vendorExtensions.x-android-sync-table}}
+    {{/model}}
+{{/models}}
+            default: {
+                throw new UnsupportedOperationException("Unknown uri: " + uri);
+            }
+        }
+
+        /**
+         * notify any registered content observer that we have new data
+         * as we explicitly invoke SyncAdapter syncs, we never notify content observers
+         * with syncToNetwork = true. This to prevent double and/or conflicting sync
+         * requests
+         */
+        getContext().getContentResolver().notifyChange(uri, null, false);
+
+        return returnUri;
+    }
+
+    @Override
+    public int delete(Uri uri, String selection, String[] selectionArgs) {
+        final SQLiteDatabase db = mOpenHelper.getWritableDatabase();
+        final int match = sUriMatcher.match(uri);
+        ContentValues values = new ContentValues();
+        Log.d(LOG_TAG, "UriMatch delete: " + Integer.toString(match));
+        int rowsUpdated;
+
+        /**
+         * add the sync flags to instruct subsequent syncs
+         */
+        values.put(Contract.Generic.COLUMN_SYNC_TO_UPDATE, false);
+        values.put(Contract.Generic.COLUMN_SYNC_TO_DELETE, true);
+
+        switch (match) {
+{{#models}}
+    {{#model}}
+        {{#vendorExtensions.x-android-sync-table}}
+            case {{model.classname.toUpperCase}}: {
+                rowsUpdated = db.update(Contract.{{model.classname}}Entry.TABLE_NAME, values, selection, selectionArgs);
+                break;
+            }
+        {{/vendorExtensions.x-android-sync-table}}
+    {{/model}}
+{{/models}}
+            default:
+                throw new UnsupportedOperationException("Unknown uri: " + uri);
+        }
+
+        /**
+         * notify any registered content observer that we have new data
+         * as we explicitly invoke SyncAdapter syncs, we never notify content observers
+         * with syncToNetwork = true. This to prevent double and/or conflicting sync
+         * requests
+        */
+        getContext().getContentResolver().notifyChange(uri, null, false);
+
+        return rowsUpdated;
+    }
+
+    @Override
+    public int update(Uri uri, ContentValues values, String selection, String[] selectionArgs) {
+        final SQLiteDatabase db = mOpenHelper.getWritableDatabase();
+        final int match = sUriMatcher.match(uri);
+        Log.d(LOG_TAG, "UriMatch update: " + Integer.toString(match));
+        int rowsUpdated;
+
+        switch (match) {
+{{#models}}
+    {{#model}}
+        {{#vendorExtensions.x-android-sync-table}}
+            case {{model.classname.toUpperCase}}: {
+                /**
+                 * add the sync flags to instruct subsequent syncs and remove beforehand any sync flags already set
+                 */
+                values.remove(Contract.Generic.COLUMN_SYNC_TO_UPDATE);
+                values.remove(Contract.Generic.COLUMN_SYNC_TO_DELETE);
+
+                values.put(Contract.Generic.COLUMN_SYNC_TO_UPDATE, true);
+                values.put(Contract.Generic.COLUMN_SYNC_TO_DELETE, false);
+
+                rowsUpdated = db.update(Contract.{{model.classname}}Entry.TABLE_NAME, values, selection, selectionArgs);
+
+                // {{model.classname}} has been updated by app, thus we want to start an upload sync of updated {{model.classname}}(s)
+                SyncAdapter.syncUpload{{model.classname}}s(getContext());
+
+                break;
+            }
+            case {{model.classname.toUpperCase}}_WITH_LOCAL_ID: {
+
+                selection =
+                        Contract.{{model.classname}}Entry.TABLE_NAME + "." + Contract.{{model.classname}}Entry._ID + " = ? ";
+                selectionArgs = new String[] {
+                        Long.toString(ContentUris.parseId(uri))
+                };
+
+                /**
+                 * add the sync flags to instruct subsequent syncs and remove beforehand any sync flags already set
+                 */
+                values.remove(Contract.Generic.COLUMN_SYNC_TO_UPDATE);
+                values.remove(Contract.Generic.COLUMN_SYNC_TO_DELETE);
+
+                values.put(Contract.Generic.COLUMN_SYNC_TO_UPDATE, true);
+                values.put(Contract.Generic.COLUMN_SYNC_TO_DELETE, false);
+
+                rowsUpdated = db.update(Contract.{{model.classname}}Entry.TABLE_NAME, values, selection, selectionArgs);
+
+                // {{model.classname}} has been updated by app, thus we want to start an upload sync of updated {{model.classname}}(s)
+                SyncAdapter.syncUpload{{model.classname}}s(getContext());
+
+                break;
+            }
+        {{/vendorExtensions.x-android-sync-table}}
+    {{/model}}
+{{/models}}
+            default:
+                throw new UnsupportedOperationException("Unknown uri: " + uri);
+        }
+
+        /**
+         * notify any registered content observer that we have new data
+         * as we explicitly invoke SyncAdapter syncs, we never notify content observers
+         * with syncToNetwork = true. This to prevent double and/or conflicting sync
+         * requests
+         */
+        getContext().getContentResolver().notifyChange(uri, null, false);
+
+        return rowsUpdated;
+    }
+
+    @Override
+    public int bulkInsert(Uri uri, ContentValues[] values) {
+        final SQLiteDatabase db = mOpenHelper.getWritableDatabase();
+        final int match = sUriMatcher.match(uri);
+        Log.d(LOG_TAG, "UriMatch bulkinsert: " + Integer.toString(match));
+        long _id;
+
+        switch (match) {
+{{#models}}
+    {{#model}}
+        {{#vendorExtensions.x-android-sync-table}}
+            case {{model.classname.toUpperCase}}: {
+                db.beginTransaction();
+                int returnCount = 0;
+                try {
+                    for (ContentValues value : values) {
+                        String backend_id = value.getAsString(Contract.Generic.COLUMN_BACKEND_ID);
+                        if (null != backend_id && backend_id.length() > 0) {
+                            // backend id needs to be unique, so do an upsert
+                            String[] projection = new String[]{
+                                Contract.{{model.classname}}Entry._ID
+                            };
+                            String selection = s{{model.classname}}WithUniqueValues;
+                            String[] selectionArgs = new String[]{
+                                String.valueOf(backend_id)
+                            };
+
+                            // do an 'upsert'
+
+                            /**
+                             * check if item already exists without using ContentProvider's query method in order
+                             * to avoid any immediate registration of cursor for any content changes
+                             */
+                            Cursor retCursor = db.query(
+                                Contract.{{model.classname}}Entry.TABLE_NAME,
+                                    projection,
+                                    selection,
+                                    selectionArgs,
+                                    null,
+                                    null,
+                                    null
+                                );
+                            if (null != retCursor && retCursor.getCount() == 0) {
+                                // if no item with this backend_id exists, do an insert
+                                _id = db.insert(Contract.{{model.classname}}Entry.TABLE_NAME, null, value);
+                            } else {
+                                // item with backend_id exists, do an update
+                                _id = db.update(Contract.{{model.classname}}Entry.TABLE_NAME, value, selection, selectionArgs);
+                            }
+                            if (_id != -1) {
+                                returnCount++;
+                            }
+
+                        } else {
+
+                            _id = db.insert(Contract.{{model.classname}}Entry.TABLE_NAME, null, value);
+                            if (_id != -1) {
+                                returnCount++;
+                            }
+                        }
+                    }
+                    db.setTransactionSuccessful();
+                } finally {
+                    db.endTransaction();
+                }
+                /**
+                 * notify any registered content observer that we have new data
+                 * as we explicitly invoke SyncAdapter syncs, we never notify content observers
+                 * with syncToNetwork = true. This to prevent double and/or conflicting sync
+                 * requests
+                 */
+                getContext().getContentResolver().notifyChange(uri, null, false);
+                return returnCount;
+            }
+        {{/vendorExtensions.x-android-sync-table}}
+    {{/model}}
+{{/models}}
+            default:
+                return super.bulkInsert(uri, values);
+        }
+    }
+
+    static UriMatcher buildUriMatcher() {
+
+        final UriMatcher matcher = new UriMatcher(UriMatcher.NO_MATCH);
+        final String authority = Contract.CONTENT_AUTHORITY;
+
+        // For each type of URI you want to add, create a corresponding code.
+
+{{#models}}
+    {{#model}}
+        {{#vendorExtensions.x-android-sync-table}}
+        matcher.addURI(authority, Contract.PATH_{{model.classname.toUpperCase}}S, {{model.classname.toUpperCase}});
+        matcher.addURI(authority, Contract.PATH_{{model.classname.toUpperCase}}S + "/#", {{model.classname.toUpperCase}}_WITH_LOCAL_ID);
+        matcher.addURI(authority, Contract.PATH_{{model.classname.toUpperCase}}S + "/*", {{model.classname.toUpperCase}}_WITH_BACKEND_ID);
+        {{/vendorExtensions.x-android-sync-table}}
+    {{/model}}
+{{/models}}
+        return matcher;
+    }
+
+    /**
+     * You do not need to call this method. This is a method specifically to assist the testing
+     * framework in running smoothly. You can read more at:
+     * http://developer.android.com/reference/android/content/ContentProvider.html#shutdown()
+     */
+    @Override
+    @TargetApi(11)
+    public void shutdown() {
+        mOpenHelper.close();
+        super.shutdown();
+    }
+
+}

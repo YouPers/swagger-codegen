@@ -2,6 +2,7 @@ package {{invokerPackage}}.content;
 
 import android.provider.BaseColumns;
 import android.net.Uri;
+import android.content.ContentUris;
 import android.content.ContentResolver;
 
 /**
@@ -51,6 +52,10 @@ public class Contract {
 
         public static final String CONTENT_DIR_TYPE = ContentResolver.CURSOR_DIR_BASE_TYPE + "/" + CONTENT_AUTHORITY + "/" + PATH_{{vendorExtensions.x-android-sync-table.toUpperCase}};
         public static final String CONTENT_ITEM_TYPE = ContentResolver.CURSOR_ITEM_BASE_TYPE + "/" + CONTENT_AUTHORITY + "/" + PATH_{{vendorExtensions.x-android-sync-table.toUpperCase}};
+
+        public static Uri build{{model.classname}}sCreate(long id) {
+            return ContentUris.withAppendedId(CONTENT_URI, id);
+        }
 
         // Table name
         public static final String TABLE_NAME = "{{vendorExtensions.x-android-sync-table}}";
