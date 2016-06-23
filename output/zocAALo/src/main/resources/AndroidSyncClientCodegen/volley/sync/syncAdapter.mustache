@@ -11,6 +11,7 @@ import android.content.SyncResult;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
+import java.util.Date;
 import {{invokerPackage}}.R;
 
 /**
@@ -24,7 +25,12 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
 
     public static final String LOG_TAG = SyncAdapter.class.getSimpleName();
 
+//    private static final String mBasePath = "http://" + BuildConfig.URL_REMOTE_SERVER_ADDRESS + ":" + BuildConfig.URL_REMOTE_SERVER_PORT + "/api";
+    private static final String mBasePath = "http://" + BuildConfig.URL_LOCAL_SERVER_ADDRESS + ":" + BuildConfig.URL_LOCAL_SERVER_PORT + "/api";
+
     private static final String SYNC_INITIAL_LOAD_FROM_SERVER = "sync_initialLoadFromServer";
+    private static final String SYNC_CREATED_AT_FROM = "sync_createdAtFrom";
+    private static final String SYNC_UPDATED_AT_FROM = "sync_updatedAtFrom";
 {{#models}}
     {{#model}}
         {{#vendorExtensions.x-android-sync-table}}
@@ -34,6 +40,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
     {{/model}}
 {{/models}}
 
+    private static final String FILENAME = "SyncLog";
     private static final int MINUTE_IN_SECS = 60;
     public static final int SYNC_INTERVAL = 1 * MINUTE_IN_SECS;
     public static final int SYNC_FLEXTIME = SYNC_INTERVAL / 3;
@@ -53,8 +60,94 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
         mContentResolver = context.getContentResolver();
     }
 
+    /**
+     * Setup up the sync adapter. This form of the
+     * constructor maintains compatibility with Android 3.0
+     * and later platform versions
+     *
+     * @param context
+     * @param autoInitialize
+     * @param allowParallelSyncs
+     */
+    public SyncAdapter(
+            Context context,
+            boolean autoInitialize,
+            boolean allowParallelSyncs) {
+        super(context, autoInitialize, allowParallelSyncs);
+        mContext = context;
+        mContentResolver = context.getContentResolver();
+    }
+
     @Override
-    public void onPerformSync(Account account, Bundle extras, String authority, ContentProviderClient provider, SyncResult syncResult) {
+    public void onPerformSync(
+            Account account,
+            Bundle extras,
+            String authority,
+            ContentProviderClient provider,
+            SyncResult syncResult) {
+
+        Log.d(LOG_TAG, "Starting sync");
+
+{{#models}}
+    {{#model}}
+        {{#vendorExtensions.x-android-sync-table}}
+        /**
+         * check, if a downstream sync is requested, such as
+         * - initial load all {{model.classname.toLowerCase}}s -> SYNC_DOWNLOAD_MANY_{{model.classname.toUpperCase}}S_FROM_SERVER
+         * - load all new {{model.classname.toLowerCase}}s -> SYNC_DOWNLOAD_MANY_{{model.classname.toUpperCase}}S_FROM_SERVER + SYNC_CREATED_AT_FROM
+         * - load all changed {{model.classname.toLowerCase}}s -> SYNC_DOWNLOAD_MANY_{{model.classname.toUpperCase}}S_FROM_SERVER + SYNC_UPDATED_AT_FROM
+         */
+        boolean isDownloadMany{{model.classname}}sFromServer = extras.getBoolean(SYNC_DOWNLOAD_MANY_{{model.classname.toUpperCase}}S_FROM_SERVER, false);
+
+        boolean isUploadMany{{model.classname}}sToServer = extras.getBoolean(SYNC_UPLOAD_MANY_{{model.classname.toUpperCase}}S_TO_SERVER, false);
+        {{/vendorExtensions.x-android-sync-table}}
+    {{/model}}
+{{/models}}
+
+        boolean isInitialLoadFromServer = extras.getBoolean(SYNC_INITIAL_LOAD_FROM_SERVER, false);
+        long createdAtFrom = extras.getLong(SYNC_CREATED_AT_FROM, 0); // only used to restrict number of entities to be downloaded
+        long updatedAtFrom = extras.getLong(SYNC_UPDATED_AT_FROM, 0); // only used to restrict number of entities to be downloaded
+
+        if (isInitialLoadFromServer) {
+{{#models}}
+    {{#model}}
+        {{#vendorExtensions.x-android-sync-table}}
+            downloadMany{{model.classname}}sFromServer(0, 0);
+        {{/vendorExtensions.x-android-sync-table}}
+    {{/model}}
+{{/models}}
+{{#models}}
+    {{#model}}
+        {{#vendorExtensions.x-android-sync-table}}
+        } else if (isDownloadMany{{model.classname}}sFromServer) {
+            downloadMany{{model.classname}}sFromServer(createdAtFrom, updatedAtFrom);
+        } else if (isUploadMany{{model.classname}}sToServer) {
+            uploadMany{{model.classname}}sToServer();
+        {{/vendorExtensions.x-android-sync-table}}
+    {{/model}}
+{{/models}}
+        } else {
+            // called by periodic Sync
+            Log.d(LOG_TAG, "Syncing periodically ");
+            writeLogFile(FILENAME, "Starting periodic sync", "");
+            // TODO: 15.06.16 What do we do with a periodic sync?
+{{#models}}
+    {{#model}}
+        {{#vendorExtensions.x-android-sync-table}}
+            uploadMany{{model.classname}}sToServer();
+        {{/vendorExtensions.x-android-sync-table}}
+    {{/model}}
+{{/models}}
+        }
+
+        Log.d(LOG_TAG, "Ending sync");
+
+        Date timestamp = new Date();
+
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(mContext);
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putLong(mContext.getString(R.string.last_sync_timestamp), timestamp.getTime());
+        editor.commit();
 
     }
 
@@ -89,9 +182,20 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
                 context.getString(R.string.content_authority), bundle);
     }
 
+    private void downloadMany{{model.classname}}sFromServer(long createdAtFrom, long updatedAtFrom) {
+        Log.d(LOG_TAG, "Download many {{model.classname}}s");
+    }
+
+    private void uploadMany{{model.classname}}sToServer() {
+        Log.d(LOG_TAG, "Upload many {{model.classname}}s");
+    }
+
         {{/vendorExtensions.x-android-sync-table}}
     {{/model}}
 {{/models}}
+    public static void initializeSyncAdapter(Context context) {
+        getSyncAccount(context);
+    }
 
     /**
      * Helper method to get the fake account to be used with SyncAdapter, or make a new one
@@ -167,6 +271,21 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
         } else {
             ContentResolver.addPeriodicSync(account,
                     authority, new Bundle(), syncInterval);
+        }
+    }
+
+    private void writeLogFile(String FILENAME, String syncState, String toBySynced) {
+        FileOutputStream fos;
+        try {
+            fos = mContext.openFileOutput(FILENAME, Context.MODE_APPEND | Context.MODE_WORLD_READABLE);
+            Date date = new Date();
+            String string = date.toString() + " " + LOG_TAG + ": " + syncState + toBySynced + "\n";
+            fos.write(string.getBytes());
+            fos.close();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 

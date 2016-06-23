@@ -102,6 +102,10 @@ public class AndroidSyncClientCodeGen extends AndroidClientCodegen {
                     swagger.setVendorExtension("x-android-sync-db-version", sync.getDbVersion());
                     swagger.setVendorExtension("x-android-sync-account-name", sync.getAccountName());
                     swagger.setVendorExtension("x-android-sync-account-type", sync.getAccountType());
+                    swagger.setVendorExtension("x-android-sync-use-local-base-path", sync.isUseLocalBasePath());
+                    swagger.setVendorExtension("x-android-sync-base-path-remote-address", sync.getBasePathRemoteAddress());
+                    swagger.setVendorExtension("x-android-sync-base-path-remote-port", sync.getBasePathRemotePort());
+                    swagger.setVendorExtension("x-android-sync-base-path-local-port", sync.getBasePathLocalPort());
 
                     this.setInvokerPackage(sync.getPackageName());
                     additionalProperties.put(CodegenConstants.INVOKER_PACKAGE, invokerPackage);

@@ -8,6 +8,10 @@ public class Sync {
     private String contentAuthority;
     private String accountName;
     private String accountType;
+    private boolean useLocalBasePath;
+    private String basePathRemoteAddress;
+    private String basePathRemotePort;
+    private String basePathLocalPort;
     private String author;
 
     public String getDbName() {
@@ -38,4 +42,19 @@ public class Sync {
         return author;
     }
 
+    public boolean isUseLocalBasePath() {
+        return useLocalBasePath;
+    }
+
+    public String getBasePathRemoteAddress() {
+        return basePathRemoteAddress;
+    }
+
+    public String getBasePathRemotePort() {
+        return basePathRemotePort;
+    }
+
+    public String getBasePathLocalPort() {
+        return basePathLocalPort;
+    }
 }

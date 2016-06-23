@@ -34,6 +34,17 @@ android {
         minSdkVersion 14
         targetSdkVersion 23
     }
+    buildTypes {
+        debug {
+            buildConfigField 'String', 'URL_REMOTE_SERVER_PORT', '\"' + '{{#swagger}}{{vendorExtensions.x-android-sync-base-path-remote-port}}{{/swagger}}' + '\"'
+            buildConfigField 'String', 'URL_REMOTE_SERVER_ADDRESS', '\"' + '{{#swagger}}{{vendorExtensions.x-android-sync-base-path-remote-address}}{{/swagger}}' + '\"'
+            buildConfigField 'String', 'URL_LOCAL_SERVER_PORT', '\"' + '{{#swagger}}{{vendorExtensions.x-android-sync-base-path-local-port}}{{/swagger}}' + '\"'
+            buildConfigField 'String', 'URL_LOCAL_SERVER_ADDRESS', '\"' + getIP() + '\"'
+            println "Used IP Address is:" + getIP()
+        }
+        release {
+        }
+    }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_7
         targetCompatibility JavaVersion.VERSION_1_7
@@ -100,3 +111,28 @@ artifacts {
     archives sourcesJar
 }
 {{/useAndroidMavenGradlePlugin}}
+
+def getIP() {
+    InetAddress result = null;
+
+    Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
+    while (interfaces.hasMoreElements()) {
+        NetworkInterface networkInterface = interfaces.nextElement();
+        if (networkInterface.getName().startsWith("en")) { // hack to avoid vpn and other devices to take precedence
+            println "Display Name: " + networkInterface.displayName;
+            Enumeration<InetAddress> addresses = networkInterface.getInetAddresses();
+            while (addresses.hasMoreElements()) {
+                InetAddress address = addresses.nextElement();
+                if (!address.isLoopbackAddress()) {
+                    if (address.isSiteLocalAddress()) {
+                        println "Local Host is: " + address.getHostAddress();
+                        return address.getHostAddress();
+                    } else if (result == null) {
+                        result = address;
+                    }
+                }
+            }
+        }
+    }
+    return (result != null ? result : InetAddress.getLocalHost()).getHostAddress();
+}
