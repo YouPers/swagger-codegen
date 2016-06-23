@@ -6,12 +6,12 @@ import android.database.Cursor;
 import java.math.BigDecimal;
 import java.util.Date;
 
-import io.swagger.client.ApiException;
-import io.swagger.client.ApiInvoker;
-import io.swagger.client.content.TableHelper;
+import {{invokerPackage}}.ApiException;
+import {{invokerPackage}}.ApiInvoker;
+import {{invokerPackage}}.content.TableHelper;
 {{#models}}
     {{#model}}
-import io.swagger.client.model.{{model.classname}};
+import {{modelPackage}}.{{model.classname}};
     {{/model}}
 {{/models}}
 

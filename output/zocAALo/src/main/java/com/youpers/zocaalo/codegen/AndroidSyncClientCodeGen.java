@@ -70,24 +70,14 @@ public class AndroidSyncClientCodeGen extends AndroidClientCodegen {
     @Override
     public void processOpts() {
         super.processOpts();
-        modelTemplateFiles.put("content/tableHelper.mustache", ".javax");
 
-        supportingFiles.add(new SupportingFile("sync/syncAdapter.mustache",
-                (sourceFolder + File.separator + syncPackage).replace(".", File.separator), "SyncAdapter.java"));
-        supportingFiles.add(new SupportingFile("sync/syncService.mustache",
-                (sourceFolder + File.separator + syncPackage).replace(".", File.separator), "SyncService.java"));
-        supportingFiles.add(new SupportingFile("observer/observer.mustache",
-                (sourceFolder + File.separator + observerPackage).replace(".", File.separator), "Observer.java"));
-        supportingFiles.add(new SupportingFile("content/contract.mustache",
-                (sourceFolder + File.separator + contentPackage).replace(".", File.separator), "Contract.java"));
-        supportingFiles.add(new SupportingFile("content/tableHelper.mustache",
-                (sourceFolder + File.separator + contentPackage).replace(".", File.separator), "TableHelper.java"));
-        supportingFiles.add(new SupportingFile("content/dataUtils.mustache",
-                (sourceFolder + File.separator + contentPackage).replace(".", File.separator), "DataUtils.java"));
+        System.out.println("x-android-sync (processOpts)");
     }
 
     @Override
     public void preprocessSwagger(Swagger swagger) {
+
+        System.out.println("x-android-sync (preprocessSwagger)");
 
         /**
          * Flatten the x-android-structure in order to allow mustache access to the single elements
@@ -106,6 +96,86 @@ public class AndroidSyncClientCodeGen extends AndroidClientCodegen {
                     System.out.println("x-android-sync (contentAuthority): " + sync.getContentAuthority());
                     System.out.println("x-android-sync (Author): " + sync.getAuthor());
                     swagger.setVendorExtension("x-android-sync-content-authority", sync.getContentAuthority());
+                    swagger.setVendorExtension("x-android-sync-package-name", sync.getPackageName());
+
+                    this.setInvokerPackage(sync.getPackageName());
+                    additionalProperties.put(CodegenConstants.INVOKER_PACKAGE, invokerPackage);
+                    requestPackage = sync.getPackageName() + ".request";
+                    authPackage = sync.getPackageName() + ".auth";
+                    apiPackage = sync.getPackageName() + ".api";
+                    modelPackage = sync.getPackageName() + ".model";
+                    additionalProperties.put("modelPackage", sync.getPackageName() + ".model");
+
+                    syncPackage = sync.getPackageName() + ".sync";
+                    observerPackage = sync.getPackageName() + ".observer";
+                    contentPackage = sync.getPackageName() + ".content";
+
+                    /**
+                     * we need first to remove already added supporting files as they have the wrong package
+                     * name
+                     */
+
+                    List<String> supportingFilesToBeReplaced =
+                            Arrays.asList("apiInvoker.mustache",
+                                    "jsonUtil.mustache",
+                                    "apiException.mustache",
+                                    "Pair.mustache",
+                                    "request/getrequest.mustache",
+                                    "request/postrequest.mustache",
+                                    "request/putrequest.mustache",
+                                    "request/deleterequest.mustache",
+                                    "request/patchrequest.mustache",
+                                    "auth/apikeyauth.mustache",
+                                    "auth/httpbasicauth.mustache",
+                                    "auth/authentication.mustache");
+
+                    for (ListIterator<SupportingFile> iter = supportingFiles.listIterator(); iter.hasNext();) {
+                        SupportingFile supportingFile = iter.next();
+                        if (supportingFilesToBeReplaced.contains(supportingFile.templateFile)) {
+                            iter.remove();
+                            System.out.println("x-android-sync (supporting file removed): " + supportingFile.templateFile);
+                        }
+                    }
+
+                    supportingFiles.add(new SupportingFile("apiInvoker.mustache",
+                            (sourceFolder + File.separator + invokerPackage).replace(".", File.separator), "ApiInvoker.java"));
+                    supportingFiles.add(new SupportingFile("jsonUtil.mustache",
+                            (sourceFolder + File.separator + invokerPackage).replace(".", File.separator), "JsonUtil.java"));
+                    supportingFiles.add(new SupportingFile("apiException.mustache",
+                            (sourceFolder + File.separator + invokerPackage).replace(".", File.separator), "ApiException.java"));
+                    supportingFiles.add(new SupportingFile("Pair.mustache",
+                            (sourceFolder + File.separator + invokerPackage).replace(".", File.separator), "Pair.java"));
+                    supportingFiles.add(new SupportingFile("request/getrequest.mustache",
+                            (sourceFolder + File.separator + requestPackage).replace(".", File.separator), "GetRequest.java"));
+                    supportingFiles.add(new SupportingFile("request/postrequest.mustache",
+                            (sourceFolder + File.separator + requestPackage).replace(".", File.separator), "PostRequest.java"));
+                    supportingFiles.add(new SupportingFile("request/putrequest.mustache",
+                            (sourceFolder + File.separator + requestPackage).replace(".", File.separator), "PutRequest.java"));
+                    supportingFiles.add(new SupportingFile("request/deleterequest.mustache",
+                            (sourceFolder + File.separator + requestPackage).replace(".", File.separator), "DeleteRequest.java"));
+                    supportingFiles.add(new SupportingFile("request/patchrequest.mustache",
+                            (sourceFolder + File.separator + requestPackage).replace(".", File.separator), "PatchRequest.java"));
+                    supportingFiles.add(new SupportingFile("auth/apikeyauth.mustache",
+                            (sourceFolder + File.separator + authPackage).replace(".", File.separator), "ApiKeyAuth.java"));
+                    supportingFiles.add(new SupportingFile("auth/httpbasicauth.mustache",
+                            (sourceFolder + File.separator + authPackage).replace(".", File.separator), "HttpBasicAuth.java"));
+                    supportingFiles.add(new SupportingFile("auth/authentication.mustache",
+                            (sourceFolder + File.separator + authPackage).replace(".", File.separator), "Authentication.java"));
+
+                    supportingFiles.add(new SupportingFile("sync/syncAdapter.mustache",
+                            (sourceFolder + File.separator + syncPackage).replace(".", File.separator), "SyncAdapter.java"));
+                    supportingFiles.add(new SupportingFile("sync/syncService.mustache",
+                            (sourceFolder + File.separator + syncPackage).replace(".", File.separator), "SyncService.java"));
+                    supportingFiles.add(new SupportingFile("observer/observer.mustache",
+                            (sourceFolder + File.separator + observerPackage).replace(".", File.separator), "Observer.java"));
+                    supportingFiles.add(new SupportingFile("content/contract.mustache",
+                            (sourceFolder + File.separator + contentPackage).replace(".", File.separator), "Contract.java"));
+                    supportingFiles.add(new SupportingFile("content/tableHelper.mustache",
+                            (sourceFolder + File.separator + contentPackage).replace(".", File.separator), "TableHelper.java"));
+                    supportingFiles.add(new SupportingFile("content/dataUtils.mustache",
+                            (sourceFolder + File.separator + contentPackage).replace(".", File.separator), "DataUtils.java"));
+
+
                 } catch (IOException e) {
                 }
             }
