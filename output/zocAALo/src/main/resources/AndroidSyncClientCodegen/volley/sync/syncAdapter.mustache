@@ -5,22 +5,55 @@ import android.accounts.AccountManager;
 import android.content.AbstractThreadedSyncAdapter;
 import android.content.ContentProviderClient;
 import android.content.ContentResolver;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.SyncRequest;
 import android.content.SyncResult;
+import android.database.Cursor;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.util.Log;
 
+import {{invokerPackage}}.ApiException;
 import {{invokerPackage}}.BuildConfig;
 import {{invokerPackage}}.R;
+{{#models}}
+    {{#model}}
+        {{#vendorExtensions.x-android-sync-table}}
+import {{invokerPackage}}.api.{{model.classname}}Api;
+        {{/vendorExtensions.x-android-sync-table}}
+    {{/model}}
+{{/models}}
+import {{invokerPackage}}.content.Contract;
+import {{invokerPackage}}.content.DataUtils;
+import {{invokerPackage}}.content.TableHelper;
+{{#models}}
+    {{#model}}
+        {{#vendorExtensions.x-android-sync-table}}
+import {{invokerPackage}}.model.{{model.classname}};
+        {{/vendorExtensions.x-android-sync-table}}
+    {{/model}}
+{{/models}}
 
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
+
+{{#models}}
+    {{#model}}
+        {{#vendorExtensions.x-android-sync-table}}
+import static {{invokerPackage}}.content.DataUtils.get{{model.classname}}ColumnIndices;
+        {{/vendorExtensions.x-android-sync-table}}
+    {{/model}}
+{{/models}}
+
 
 /**
 *
@@ -77,22 +110,14 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
      * @param autoInitialize
      * @param allowParallelSyncs
      */
-    public SyncAdapter(
-            Context context,
-            boolean autoInitialize,
-            boolean allowParallelSyncs) {
+    public SyncAdapter(Context context, boolean autoInitialize, boolean allowParallelSyncs) {
         super(context, autoInitialize, allowParallelSyncs);
         mContext = context;
         mContentResolver = context.getContentResolver();
     }
 
     @Override
-    public void onPerformSync(
-            Account account,
-            Bundle extras,
-            String authority,
-            ContentProviderClient provider,
-            SyncResult syncResult) {
+    public void onPerformSync(Account account, Bundle extras, String authority, ContentProviderClient provider, SyncResult syncResult) {
 
         Log.d(LOG_TAG, "Starting sync");
 
@@ -172,7 +197,6 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
             context.getString(R.string.content_authority), bundle);
     }
 
-
 {{#models}}
     {{#model}}
         {{#vendorExtensions.x-android-sync-table}}
@@ -191,11 +215,125 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
     }
 
     private void downloadMany{{model.classname}}sFromServer(long createdAtFrom, long updatedAtFrom) {
+
         Log.d(LOG_TAG, "Download many {{model.classname}}s");
+
+        if (createdAtFrom == 0 && updatedAtFrom == 0) {
+            // we are doing an initial load with {{model.classname}}s from the server
+
+            Log.d(LOG_TAG, "Initial load " + SYNC_DOWNLOAD_MANY_{{model.classname.toUpperCase}}S_FROM_SERVER);
+            writeLogFile(FILENAME, "Starting initial load for: ", SYNC_DOWNLOAD_MANY_{{model.classname.toUpperCase}}S_FROM_SERVER);
+
+            {{model.classname}}Api {{model.classname.toLowerCase}}Api = new {{model.classname}}Api();
+            {{model.classname.toLowerCase}}Api.setBasePath(mBasePath);
+            Log.d(LOG_TAG, "Base Path: " + mBasePath);
+
+            // load all available {{model.classname}}s from backend server
+
+            try {
+                // first read all {{model.classname}}s from server
+                List<{{model.classname}}> {{model.classname.toLowerCase}}s = {{model.classname.toLowerCase}}Api.{{model.classname.toLowerCase}}sReadAll();
+
+                if (null != {{model.classname.toLowerCase}}s) {
+                    Log.d(LOG_TAG, "Number of found {{model.classname}}s: " + Integer.toString({{model.classname.toLowerCase}}s.size()));
+
+                    // then store all of them to local db
+                    List<ContentValues> {{model.classname.toLowerCase}}sValues = new ArrayList<ContentValues>();
+
+                    for ({{model.classname}} {{model.classname.toLowerCase}} : {{model.classname.toLowerCase}}s) {
+                        {{model.classname.toLowerCase}}sValues.add(DataUtils.{{model.classname}}Entry.getContentValues({{model.classname.toLowerCase}}));
+                    }
+
+                    ContentValues[] contentValues = {{model.classname.toLowerCase}}sValues.toArray(new ContentValues[{{model.classname.toLowerCase}}sValues.size()]);
+
+                    int inserted{{model.classname}}s = mContentResolver.bulkInsert(Contract.{{model.classname}}Entry.CONTENT_URI, contentValues);
+
+                    Log.d(LOG_TAG, "Number of inserted {{model.classname}}s: " + Integer.toString(inserted{{model.classname}}s));
+
+                }
+            } catch (ApiException ae) {
+                Log.d(LOG_TAG, ae.toString());
+            } catch (TimeoutException te) {
+                Log.d(LOG_TAG, te.getMessage());
+            } catch (InterruptedException ie) {
+                Log.d(LOG_TAG, ie.getMessage());
+            } catch (ExecutionException ee) {
+                Log.d(LOG_TAG, ee.getMessage());
+            }
+
+            writeLogFile(FILENAME, "Ending initial load for: ", SYNC_DOWNLOAD_MANY_{{model.classname.toUpperCase}}S_FROM_SERVER);
+
+        } else {
+
+            // TODO: 15.06.16 implement selective download based on createdAtFrom and changedAtFrom
+
+        }
     }
 
     private void uploadMany{{model.classname}}sToServer() {
         Log.d(LOG_TAG, "Upload many {{model.classname}}s");
+        Log.d(LOG_TAG, "Syncing " + SYNC_UPLOAD_MANY_{{model.classname.toUpperCase}}S_TO_SERVER);
+        writeLogFile(FILENAME, "Starting sync for: ", SYNC_UPLOAD_MANY_{{model.classname.toUpperCase}}S_TO_SERVER);
+
+        // we have locally changed {{model.classname}}s which we want to upload/sync with the server
+
+        Cursor cursor = mContentResolver.query(Contract.{{model.classname}}Entry.CONTENT_URI_{{model.classname.toUpperCase}}S_TO_BE_UPLOADED, null, null, null, null);
+
+        if (null != cursor) {
+
+            {{model.classname}}Api {{model.classname.toLowerCase}}Api = new {{model.classname}}Api();
+            {{model.classname.toLowerCase}}Api.setBasePath(mBasePath);
+            Log.d(LOG_TAG, "Base Path: " + mBasePath);
+
+            int nof{{model.classname}}s = cursor.getCount();
+            Log.d(LOG_TAG, "Number of {{model.classname}}s to by synced with server: " + Integer.toString(nof{{model.classname}}s));
+            TableHelper.{{model.classname}}ColumnIndices {{model.classname.toLowerCase}}ColumnIndices = get{{model.classname}}ColumnIndices(cursor);
+            while (cursor.moveToNext()) {
+                {{model.classname}} {{model.classname.toLowerCase}} = DataUtils.get{{model.classname}}sFromContentValues(cursor, {{model.classname.toLowerCase}}ColumnIndices);
+                {{model.classname}} new{{model.classname}};
+                try {
+                    if (null != {{model.classname.toLowerCase}}.getId()) {
+                        /**
+                         * the {{model.classname.toLowerCase}} to be uploaded already exists on the backend server, thus we need
+                         * to issue a an update to server
+                         */
+                        new{{model.classname}} = {{model.classname.toLowerCase}}Api.{{model.classname.toLowerCase}}sUpdateOne({{model.classname.toLowerCase}}.getId(), {{model.classname.toLowerCase}});
+                        Log.d(LOG_TAG, "Modified {{model.classname}} on Backend Server: " + new{{model.classname}}.toString());
+
+                    } else {
+                        new{{model.classname}} = {{model.classname.toLowerCase}}Api.{{model.classname.toLowerCase}}sCreate({{model.classname.toLowerCase}});
+                        Log.d(LOG_TAG, "New {{model.classname}} on Backend Server: " + new{{model.classname}}.toString());
+                    }
+                    ContentValues values = new ContentValues();
+                    values.put(Contract.Generic.COLUMN_BACKEND_ID, new{{model.classname}}.getId());
+                    values.put(Contract.Generic.COLUMN_BACKEND_CREATED_AT, new{{model.classname}}.getCreatedAt().getTime());
+                    values.put(Contract.Generic.COLUMN_BACKEND_UPDATED_AT, new{{model.classname}}.getUpdatedAt().getTime());
+                    values.put(Contract.Generic.COLUMN_BACKEND_VERSION_ID, new{{model.classname}}.getVersionID());
+                    values.put(Contract.Generic.COLUMN_SYNC_TO_DELETE, false);
+                    values.put(Contract.Generic.COLUMN_SYNC_TO_UPDATE, false);
+                    values.put(Contract.Generic.COLUMN_MARKED_AS_DELETED, false);
+                    String selection =
+                            Contract.{{model.classname}}Entry.TABLE_NAME + "." + Contract.{{model.classname}}Entry._ID + " = ? ";
+                    String[] selectionArgs = new String[]{
+                            Integer.toString(cursor.getInt({{model.classname.toLowerCase}}ColumnIndices.COL_IDX_LOCAL_ID))
+                    };
+
+                    int nOfUpdated{{model.classname}}s = mContentResolver.update(Contract.{{model.classname}}Entry.CONTENT_URI_{{model.classname.toUpperCase}}_FROM_SERVER, values, selection, selectionArgs);
+
+                } catch (TimeoutException e) {
+                    e.printStackTrace();
+                } catch (ExecutionException e) {
+                    e.printStackTrace();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                } catch (ApiException e) {
+                    e.printStackTrace();
+                }
+            }
+            cursor.close();
+            writeLogFile(FILENAME, "Ending sync for: ", SYNC_UPLOAD_MANY_{{model.classname.toUpperCase}}S_TO_SERVER);
+
+        }
     }
 
         {{/vendorExtensions.x-android-sync-table}}

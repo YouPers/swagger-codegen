@@ -37,6 +37,8 @@ public class Provider extends ContentProvider {
     static final int {{model.classname.toUpperCase}} = {{-index}}00;
     static final int {{model.classname.toUpperCase}}_WITH_LOCAL_ID = {{-index}}01;
     static final int {{model.classname.toUpperCase}}_WITH_BACKEND_ID = {{-index}}02;
+    static final int {{model.classname.toUpperCase}}S_TO_BE_UPLOADED = {{-index}}03;
+    static final int {{model.classname.toUpperCase}}_UPDATED_FROM_SERVER = {{-index}}04;
 {{/models}}
 
     // all predefined query selections
@@ -99,6 +101,23 @@ public class Provider extends ContentProvider {
                 );
                 break;
             }
+            case {{model.classname.toUpperCase}}S_TO_BE_UPLOADED: {
+                selection =
+                    Contract.{{model.classname}}Entry.TABLE_NAME + "." + Contract.Generic.COLUMN_SYNC_TO_UPDATE + " = ? ";
+                selectionArgs = new String[] {
+                    "1" // means true
+                };
+                retCursor = mOpenHelper.getReadableDatabase().query(
+                        Contract.{{model.classname}}Entry.TABLE_NAME,
+                        projection,
+                        selection,
+                        selectionArgs,
+                        null,
+                        null,
+                        sortOrder
+                );
+                break;
+            }
         {{/vendorExtensions.x-android-sync-table}}
     {{/model}}
 {{/models}}
@@ -125,6 +144,10 @@ public class Provider extends ContentProvider {
             case {{model.classname.toUpperCase}}_WITH_LOCAL_ID:
                 return Contract.{{model.classname}}Entry.CONTENT_ITEM_TYPE;
             case {{model.classname.toUpperCase}}_WITH_BACKEND_ID:
+                return Contract.{{model.classname}}Entry.CONTENT_ITEM_TYPE;
+            case {{model.classname.toUpperCase}}S_TO_BE_UPLOADED:
+                return Contract.{{model.classname}}Entry.CONTENT_DIR_TYPE;
+            case {{model.classname.toUpperCase}}_UPDATED_FROM_SERVER:
                 return Contract.{{model.classname}}Entry.CONTENT_ITEM_TYPE;
         {{/vendorExtensions.x-android-sync-table}}
     {{/model}}
@@ -288,6 +311,23 @@ public class Provider extends ContentProvider {
 
                 break;
             }
+            case {{model.classname.toUpperCase}}_UPDATED_FROM_SERVER: {
+
+                /**
+                 * add the sync flags to instruct subsequent syncs and remove beforehand any sync flags already set
+                 */
+                values.remove(Contract.Generic.COLUMN_SYNC_TO_UPDATE);
+                values.remove(Contract.Generic.COLUMN_SYNC_TO_DELETE);
+
+                values.put(Contract.Generic.COLUMN_SYNC_TO_UPDATE, true);
+                values.put(Contract.Generic.COLUMN_SYNC_TO_DELETE, false);
+
+                rowsUpdated = db.update(Contract.{{model.classname}}Entry.TABLE_NAME, values, selection, selectionArgs);
+
+                // here we do not invoke any sync as the update has been done due to a download from server
+
+                break;
+            }
         {{/vendorExtensions.x-android-sync-table}}
     {{/model}}
 {{/models}}
@@ -310,7 +350,6 @@ public class Provider extends ContentProvider {
     public int bulkInsert(Uri uri, ContentValues[] values) {
         final SQLiteDatabase db = mOpenHelper.getWritableDatabase();
         final int match = sUriMatcher.match(uri);
-        Log.d(LOG_TAG, "UriMatch bulkinsert: " + Integer.toString(match));
         long _id;
 
         Log.d(LOG_TAG, "UriMatch (bulkInsert) is: " + Integer.toString(sUriMatcher.match(uri)));
@@ -408,6 +447,8 @@ public class Provider extends ContentProvider {
         matcher.addURI(authority, Contract.PATH_{{model.classname.toUpperCase}}S, {{model.classname.toUpperCase}});
         matcher.addURI(authority, Contract.PATH_{{model.classname.toUpperCase}}S + "/#", {{model.classname.toUpperCase}}_WITH_LOCAL_ID);
         matcher.addURI(authority, Contract.PATH_{{model.classname.toUpperCase}}S + "/*", {{model.classname.toUpperCase}}_WITH_BACKEND_ID);
+        matcher.addURI(authority, Contract.PATH_{{model.classname.toUpperCase}}S_TO_BE_UPLOADED, {{model.classname.toUpperCase}}S_TO_BE_UPLOADED);
+        matcher.addURI(authority, Contract.PATH_{{model.classname.toUpperCase}}_FROM_SERVER, {{model.classname.toUpperCase}}_UPDATED_FROM_SERVER);
         {{/vendorExtensions.x-android-sync-table}}
     {{/model}}
 {{/models}}
