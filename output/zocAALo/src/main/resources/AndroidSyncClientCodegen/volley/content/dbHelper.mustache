@@ -3,6 +3,7 @@ package {{invokerPackage}}.content;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.util.Log;
 
 import {{invokerPackage}}.content.Contract;
 
@@ -15,7 +16,7 @@ import {{invokerPackage}}.content.Contract;
 
 public class DBHelper extends SQLiteOpenHelper {
 
-    public static final String LOG_TAG = DBHelper.class.getSimpleName();
+    public static final String LOG_TAG = "{{appName}}: " + DBHelper.class.getSimpleName();
 
 {{#swagger}}
     static final String DATABASE_NAME = "{{vendorExtensions.x-android-sync-db-name}}";
@@ -28,6 +29,8 @@ public class DBHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
+
+        Log.d(LOG_TAG, "Create SQLite tables.");
 
 {{#models}}
     {{#model}}

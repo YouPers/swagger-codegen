@@ -3,6 +3,7 @@ package {{invokerPackage}}.authentication;
 import android.app.Service;
 import android.content.Intent;
 import android.os.IBinder;
+import android.util.Log;
 
 /**
  *
@@ -13,6 +14,8 @@ import android.os.IBinder;
 
 public class AuthenticatorService extends Service {
 
+    public static final String LOG_TAG = "{{appName}}: " + AuthenticatorService.class.getSimpleName();
+
     // Instance field that stores the authenticator object
     private Authenticator mAuthenticator;
 
@@ -20,6 +23,9 @@ public class AuthenticatorService extends Service {
     @Override
     public void onCreate() {
         // Create a new authenticator object
+
+        Log.d(LOG_TAG, "Create Sync Service.");
+
         mAuthenticator = new Authenticator(this);
     }
 
