@@ -1,5 +1,9 @@
 package com.youpers.zocaalo.codegen;
 
+/**
+ * Class needed to convert JSON structure to POJO for zocAALo specific configuration info in swagger.json
+ */
+
 public class Sync {
 
     private String dbName;

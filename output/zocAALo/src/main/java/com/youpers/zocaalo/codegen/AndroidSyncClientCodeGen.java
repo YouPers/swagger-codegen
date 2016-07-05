@@ -194,6 +194,8 @@ public class AndroidSyncClientCodeGen extends AndroidClientCodegen {
                             (sourceFolder + File.separator + authenticationPackage).replace(".", File.separator), "Authenticator.java"));
                     supportingFiles.add(new SupportingFile("authentication/authenticatorService.mustache",
                             (sourceFolder + File.separator + authenticationPackage).replace(".", File.separator), "AuthenticatorService.java"));
+                    supportingFiles.add(new SupportingFile("shell.mustache",
+                            (sourceFolder + File.separator + invokerPackage).replace(".", File.separator), "Shell.java"));
 
                     supportingFiles.add(new SupportingFile("valuesstrings.mustache", projectFolder + File.separator + "res" + File.separator + "values", "strings.xml"));
                     supportingFiles.add(new SupportingFile("authenticator.mustache", projectFolder + File.separator + "res" + File.separator + "xml", "authenticator.xml"));

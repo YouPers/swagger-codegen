@@ -1,0 +1,53 @@
+package {{invokerPackage}};
+
+import android.content.Context;
+import android.os.Handler;
+import android.os.Looper;
+
+import {{invokerPackage}}.ApiInvoker;
+import {{invokerPackage}}.content.Contract;
+import {{invokerPackage}}.observer.Observer;
+import {{invokerPackage}}.sync.SyncAdapter;
+
+/**
+ *
+ * Application: {{appName}} - {{appVersion}}
+ * Contact:     {{infoEmail}} - {{infoUrl}}
+ *
+ */
+
+public class Shell {
+
+    public static final String LOG_TAG = "{{appName}}: " + Shell.class.getSimpleName();
+
+    private static Context mContext;
+
+    private static Observer mObserver;
+
+    public static void initialize(Context context) {
+
+        mContext = context;
+
+        ApiInvoker.initializeInstance(); // needed to initialize ApiInvoker as soon as possible
+
+        SyncAdapter.initializeSyncAdapter(mContext);
+
+    }
+
+    public static void registerObserver() {
+        mObserver = new Observer(mContext, new Handler(Looper.getMainLooper()));
+
+{{#models}}
+    {{#model}}
+        {{#vendorExtensions.x-android-sync-table}}
+        mContext.getContentResolver().registerContentObserver(Contract.{{model.classname}}Entry.CONTENT_URI, false, mObserver);
+        {{/vendorExtensions.x-android-sync-table}}
+    {{/model}}
+{{/models}}
+    }
+
+    public static void unregisterObserver() {
+        mContext.getContentResolver().unregisterContentObserver(mObserver);
+    }
+
+}
