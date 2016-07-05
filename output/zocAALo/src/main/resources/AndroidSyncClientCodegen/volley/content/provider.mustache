@@ -319,7 +319,7 @@ public class Provider extends ContentProvider {
                 values.remove(Contract.Generic.COLUMN_SYNC_TO_UPDATE);
                 values.remove(Contract.Generic.COLUMN_SYNC_TO_DELETE);
 
-                values.put(Contract.Generic.COLUMN_SYNC_TO_UPDATE, true);
+                values.put(Contract.Generic.COLUMN_SYNC_TO_UPDATE, false);
                 values.put(Contract.Generic.COLUMN_SYNC_TO_DELETE, false);
 
                 rowsUpdated = db.update(Contract.{{model.classname}}Entry.TABLE_NAME, values, selection, selectionArgs);
